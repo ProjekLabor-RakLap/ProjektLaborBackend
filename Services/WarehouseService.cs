@@ -83,14 +83,10 @@ namespace ProjectLaborBackend.Services
                 throw new ArgumentException($"There is already an existing warehouse with location: {warehouseDto.Location}");
 
             if (warehouseDto.Name != null && warehouseDto.Name.Length > 100)
-            {
                 throw new ArgumentOutOfRangeException("Name cannot exceed 100 characters!");
-            }
 
             if (warehouseDto.Location != null && warehouseDto.Location.Length > 200)
-            {
                 throw new ArgumentOutOfRangeException("Location cannot exceed 200 characters!");
-            }
 
             _mapper.Map(warehouseDto, wareHouse);
 
@@ -151,13 +147,10 @@ namespace ProjectLaborBackend.Services
             }
 
             if (StockChangeToAdd.Count > 0)
-            {
                 _context.Warehouses.AddRange(StockChangeToAdd);
-            }
             if (WareHouseToUpdate.Count > 0)
-            {
                 _context.Warehouses.UpdateRange(WareHouseToUpdate);
-            }
+            
             try
             {
                 _context.SaveChanges();

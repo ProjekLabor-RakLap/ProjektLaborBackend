@@ -53,7 +53,7 @@ namespace ProjectLaborBackend.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest($"{e.Message}, {e.InnerException}");
             }
 
             return Ok("Product created");

@@ -33,24 +33,19 @@ namespace ProjectLaborBackend.Services
         public async Task CreateProductAsync(ProductCreateDTO product)
         {
             if (product.EAN.Length > 20)
-            {
                 throw new ArgumentException("EAN must be 20 characters or less!");
-            }
 
             if (await _context.Products.AnyAsync(p => p.EAN == product.EAN))
-            {
                 throw new ArgumentException("Product with this EAN already exists!");
-            }
 
             if (product.Name.Length > 100)
-            {
                 throw new ArgumentException("Product name must be 100 characters or less!");
-            }
 
             if (product.Description.Length > 500)
-            {
                 throw new ArgumentException("Description must be 500 characters or less!");
-            }
+
+            if (product.Image == null)
+                product.Image = "No Picture";
 
             await _context.Products.AddAsync(_mapper.Map<Product>(product));
             await _context.SaveChangesAsync();
@@ -60,9 +55,7 @@ namespace ProjectLaborBackend.Services
         {
             Product? product = await _context.Products.FindAsync(id);
             if (product == null)
-            {
                 throw new KeyNotFoundException("Product not found");
-            }
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
@@ -77,9 +70,7 @@ namespace ProjectLaborBackend.Services
         {
             Product? product = await _context.Products.FindAsync(id);
             if (product == null)
-            {
                 throw new KeyNotFoundException("Product not found!");
-            }
 
             return _mapper.Map<ProductGetDTO>(product);
         }
@@ -87,35 +78,23 @@ namespace ProjectLaborBackend.Services
         public async Task UpdateProductAsync(int id, ProductUpdateDTO dto)
         {
             if (dto == null)
-            {
                 throw new ArgumentNullException("No data to be changed!");
-            }
 
             Product? product = await _context.Products.FindAsync(id);
             if (product == null)
-            {
                 throw new KeyNotFoundException("Product not found!");
-            }
 
-            if (dto.EAN.Length > 20)
-            {
+            if (dto.EAN != null && dto.EAN.Length > 20)
                 throw new ArgumentException("EAN must be 20 characters or less!");
-            }
 
-            if (await _context.Products.AnyAsync(p => p.EAN == dto.EAN))
-            {
+            if (await _context.Products.AnyAsync(p => p.EAN == dto.EAN && p.Id != product.Id))
                 throw new ArgumentException("Product with this EAN already exists!");
-            }
 
-            if (dto.Name.Length > 100)
-            {
+            if (dto.Name != null && dto.Name.Length > 100)
                 throw new ArgumentException("Product name must be 100 characters or less!");
-            }
 
-            if (dto.Description.Length > 500)
-            {
+            if (dto.Description != null && dto.Description.Length > 500)
                 throw new ArgumentException("Description must be 500 characters or less!");
-            }
 
             _mapper.Map(dto, product);
 
@@ -171,13 +150,10 @@ namespace ProjectLaborBackend.Services
             }
 
             if (productsToAdd.Count > 0)
-            {
                 _context.Products.AddRange(productsToAdd);
-            }
             if (productsToUpdate.Count > 0)
-            {
                 _context.Products.UpdateRange(productsToUpdate);
-            }
+           
             try
             {
                 _context.SaveChanges();
@@ -207,9 +183,7 @@ namespace ProjectLaborBackend.Services
         {
             Product? product = await _context.Products.Where(x => x.EAN == ean).FirstOrDefaultAsync();
             if (product == null)
-            {
                 throw new KeyNotFoundException("Product not found!");
-            }
 
             return _mapper.Map<ProductGetDTO>(product);
         }

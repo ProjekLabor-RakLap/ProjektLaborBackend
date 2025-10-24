@@ -54,9 +54,7 @@ namespace ProjectLaborBackend.Services
                 throw new ArgumentException($"There is no product with id: {stockChangeDto.ProductId}");
 
             if (stockChangeDto.Quantity == 0)
-            {
                 throw new ArgumentException("Quantity cannot be zero!");
-            }
 
             try
             {
@@ -76,15 +74,13 @@ namespace ProjectLaborBackend.Services
         {
             if (stockChangeDto == null)
                 throw new ArgumentNullException("Quantity, ChangeDate or ProductId needed");
+           
             if (stockChangeDto.ProductId != null && !_context.Products.Any(p => p.Id == stockChangeDto.ProductId))
                 throw new ArgumentException($"There is no product with id: {stockChangeDto.ProductId}");
-            if (stockChangeDto.Quantity == 0)
-                throw new ArgumentException("Quantity cannot be zero");
 
             if (stockChangeDto.Quantity != null && stockChangeDto.Quantity == 0)
-            {
                 throw new ArgumentException("Quantity cannot be zero!");
-            }
+            
 
             StockChange? stockChange = await _context.StockChanges.FirstOrDefaultAsync(s => s.Id == id);
             if (stockChange == null)
@@ -159,13 +155,10 @@ namespace ProjectLaborBackend.Services
             }
 
             if (StockChangeToAdd.Count > 0)
-            {
                 _context.StockChanges.AddRange(StockChangeToAdd);
-            }
             if (StockChangeToUpdate.Count > 0)
-            {
                 _context.StockChanges.UpdateRange(StockChangeToUpdate);
-            }
+
             try
             {
                 _context.SaveChanges();
@@ -179,18 +172,14 @@ namespace ProjectLaborBackend.Services
         public async Task<double> CalculateMovingAverageQuantityAsync(int productId, int warehouseId, int windowSize)
         {
             if (windowSize <= 0)
-            {
                 throw new ArgumentException("Window size must be positive and not zero!");
-            }
 
             var stock = await _context.Stocks
                 .Where(s => s.ProductId == productId && s.WarehouseId == warehouseId)
                 .FirstOrDefaultAsync();
 
             if (stock == null)
-            {
                 throw new ArgumentException($"Product with id {productId} is not stocked in warehouse {warehouseId}!");
-            }
 
             var stockChanges = await _context.StockChanges
                 .Where(sc => sc.ProductId == productId && sc.Quantity < 0 &&
@@ -202,9 +191,7 @@ namespace ProjectLaborBackend.Services
                 .ToListAsync();
 
             if (stockChanges.Count < windowSize)
-            {
                 throw new Exception($"Not enough stock changes to calculate moving average for the last ({windowSize}) changes for given product!");
-            }
 
             double totalSaleChanges = Math.Abs(stockChanges.Sum(sc => sc.Quantity));
             

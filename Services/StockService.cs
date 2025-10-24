@@ -32,36 +32,24 @@ namespace ProjectLaborBackend.Services
         public async Task CreateStockAsync(StockCreateDTO stock)
         {
             if (stock.Currency.Length > 50)
-            {
                 throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
-            }
 
             if (stock.StockInWarehouse < 0 || stock.StockInStore < 0)
-            {
                 throw new ArgumentOutOfRangeException("Stock cannot be negative!");
-            }
 
             if (stock.WarehouseCapacity <= 0 || stock.StoreCapacity <= 0)
-            {
                 throw new ArgumentOutOfRangeException("Capacity cannot be equal or less than 0!");
-            }
 
             if (stock.StockInStore > stock.StoreCapacity && stock.StockInWarehouse > stock.WarehouseCapacity)
-            {
                 throw new Exception("Stock in store and warehouse cannot exceed their capacities!");
-            }
 
             var warehouse = await _context.Warehouses.FindAsync(stock.WarehouseId);
             if (warehouse == null)
-            {
                 throw new KeyNotFoundException("Warehouse with that id does not exist!");
-            }
 
             var product = await _context.Products.FindAsync(stock.ProductId);
             if (product == null)
-            {
                 throw new KeyNotFoundException("Warehouse with that id does not exist!");
-            }
 
             await _context.Stocks.AddAsync(_mapper.Map<Stock>(stock));
             await _context.SaveChangesAsync();
@@ -69,11 +57,9 @@ namespace ProjectLaborBackend.Services
 
         public async Task DeleteStockAsync(int id)
         {
-            Stock stock = await _context.Stocks.FindAsync(id);
+            Stock? stock = await _context.Stocks.FindAsync(id);
             if (stock == null)
-            {
                 throw new KeyNotFoundException("Stock not found");
-            }
 
             _context.Stocks.Remove(stock);
             await _context.SaveChangesAsync();
@@ -88,9 +74,7 @@ namespace ProjectLaborBackend.Services
         {
             Stock? stock = await _context.Stocks.Include(p => p.Product).Include(w => w.Warehouse).FirstOrDefaultAsync(i => i.Id == id);
             if (stock == null)
-            {
                 throw new KeyNotFoundException("Stock not found!");
-            }
 
             return _mapper.Map<StockGetDTO>(stock);
         }
@@ -98,22 +82,15 @@ namespace ProjectLaborBackend.Services
         public async Task UpdateStockAsync(int id, StockUpdateDto dto)
         {
             if (dto == null)
-            {
                 throw new ArgumentNullException("No data to be changed!");
-            }
 
-            if (dto.Currency != null && dto.Currency.Length > 50)
-            {
+            if (dto.Currency != null && dto.Currency.Length > 50) //50???? 9 a leghosszabb a világon...
                 throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
-            }
 
-            Stock stock = await _context.Stocks.FindAsync(id);
+            Stock? stock = await _context.Stocks.FindAsync(id);
             if (stock == null)
-            {
                 throw new KeyNotFoundException("Stock not found!");
-            }
 
-            //Validate store capacity
             if (dto.StoreCapacity != null && dto.StockInStore != null)
             {
                 if (dto.StockInStore > dto.StoreCapacity)
@@ -136,7 +113,6 @@ namespace ProjectLaborBackend.Services
                 }
             }
 
-            //Validate warehouse capacity
             if (dto.WarehouseCapacity != null && dto.StockInWarehouse != null)
             {
                 if (dto.StockInWarehouse > dto.WarehouseCapacity)
@@ -159,7 +135,6 @@ namespace ProjectLaborBackend.Services
                 }
             }
 
-
             if (dto.WarehouseId != null)
             {
                 var warehouse = await _context.Warehouses.FirstOrDefaultAsync(x => x.Id == dto.WarehouseId);
@@ -168,7 +143,6 @@ namespace ProjectLaborBackend.Services
                     throw new KeyNotFoundException($"Warehouse with {dto.WarehouseId} id does not exist!");
                 }
             }
-
 
             if (dto.ProductId != null)
             {
@@ -213,49 +187,27 @@ namespace ProjectLaborBackend.Services
                 });
             }
             if(stocksFromExcel.Count == 0)
-            {
                 throw new ArgumentNullException("No data to be changed!");
-            }
             if (stocksFromExcel.Any(s => s.Currency.Length > 50))
-            {
                 throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
-            }
             if (stocksFromExcel.Any(s => s.StockInWarehouse < 0 || s.StockInStore < 0))
-            {
                 throw new ArgumentOutOfRangeException("Stock cannot be negative!");
-            }
             if (stocksFromExcel.Any(s => s.WarehouseCapacity <= 0 || s.StoreCapacity <= 0))
-            {
                 throw new ArgumentOutOfRangeException("Capacity cannot be equal or less than 0!");
-            }
             if (stocksFromExcel.Any(s => s.StockInStore > s.StoreCapacity && s.StockInWarehouse > s.WarehouseCapacity))
-            {
                 throw new Exception("Stock in store and warehouse cannot exceed their capacities!");
-            }
             if (stocksFromExcel.Any(s => !_context.Warehouses.Any(w => w.Id == s.WarehouseId)))
-            {
                 throw new KeyNotFoundException("One or more warehouses with given ids do not exist!");
-            }
             if (stocksFromExcel.Any(s => !_context.Products.Any(p => p.Id == s.ProductId)))
-            {
                 throw new KeyNotFoundException("One or more products with given ids do not exist!");
-            }
             if (stocksFromExcel.Any(s => currentStock.Count(cs => cs.ProductId == s.ProductId) > 1))
-            {
                 throw new Exception("There are duplicate products in the database!");
-            }
             if (stocksFromExcel.Any(s => stocksFromExcel.Count(cs => cs.ProductId == s.ProductId) > 1))
-            {
                 throw new Exception("There are duplicate products in the imported data!");
-            }
             if (stocksFromExcel.Any(s => currentStock.Any(cs => cs.ProductId == s.ProductId && (s.StockInStore < 0 || s.StockInWarehouse < 0))))
-            {
                 throw new Exception("Stock in store or warehouse cannot be negative!");
-            }
             if (stocksFromExcel.Any(s => currentStock.Any(cs => cs.ProductId == s.ProductId && s.Price < 0)))
-            {
                 throw new ArgumentOutOfRangeException("Price cannot be negative!");
-            }
 
             foreach (Stock stock in stocksFromExcel)
             {
@@ -277,13 +229,10 @@ namespace ProjectLaborBackend.Services
             }
 
             if (stocksToAdd.Count > 0)
-            {
                 _context.Stocks.AddRange(stocksToAdd);
-            }
             if (stocksToUpdate.Count > 0)
-            {
                 _context.Stocks.UpdateRange(stocksToUpdate);
-            }
+
             try
             {
                 _context.SaveChanges();
@@ -300,16 +249,12 @@ namespace ProjectLaborBackend.Services
 
         public async Task UpdateStockAfterStockChange(int productId, int warehouseId, int quantity)
         {
-            Stock stock = await _context.Stocks.FirstOrDefaultAsync(s => s.ProductId == productId && s.WarehouseId == warehouseId);
+            Stock? stock = await _context.Stocks.FirstOrDefaultAsync(s => s.ProductId == productId && s.WarehouseId == warehouseId);
             if (stock == null)
-            {
                 throw new KeyNotFoundException("Stock not found!");
-            }
 
             if (stock.StockInWarehouse + quantity < 0)
-            {
                 throw new ArgumentOutOfRangeException("Stock in warehouse cannot be negative!");
-            }
 
             stock.StockInWarehouse += quantity;
 
@@ -327,9 +272,7 @@ namespace ProjectLaborBackend.Services
         {
             Stock? stock = await _context.Stocks.Include("Product").Where(x => x.Product.Id == productId).FirstOrDefaultAsync();
             if (stock == null)
-            {
                 throw new KeyNotFoundException("Stock not found!");
-            }
 
             return _mapper.Map<StockGetDTO>(stock);
         }
