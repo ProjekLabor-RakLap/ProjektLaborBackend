@@ -19,6 +19,7 @@ namespace ProjectLaborBackend.Services
         Task<List<ProductGetDTO>> GetAllProductsByWarehouseAsync(int warehouseId);
         Task<ProductGetDTO?> GetProductByEANAsync(string ean);
         Task<ProductGetDTO> GetMostSoldProductByWarehouse(int warehouseId);
+        Task<List<ProductGetDTO>> GetAllStuckProductsAsync(int warehouseId);
     }
 
     public class ProductService : IProductService
@@ -227,6 +228,27 @@ namespace ProjectLaborBackend.Services
             }
 
             return _mapper.Map<ProductGetDTO>(maxProduct);
+        }
+
+        public async Task<List<ProductGetDTO>> GetAllStuckProductsAsync(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Include(p => p.StockChanges)
+                .Where(p => p.Stocks.Any(s => s.Warehouse.Id == warehouseId))
+                .ToListAsync();
+
+            List<Product> stuckProducts = new List<Product>();
+
+            foreach (var product in products)
+            {
+                if (product.StockChanges.Where(p => p.ChangeDate < DateTime.Now.AddMonths(-1) && p.Quantity < 0).Any())
+                {
+                    stuckProducts.Add(product);
+                }
+            }
+            return _mapper.Map<List<ProductGetDTO>>(stuckProducts);
         }
 
     }
