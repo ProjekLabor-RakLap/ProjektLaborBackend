@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
+using Org.BouncyCastle.Crypto;
 using ProjectLaborBackend.Dtos.Product;
 using ProjectLaborBackend.Entities;
 
@@ -17,6 +18,7 @@ namespace ProjectLaborBackend.Services
         void InsertOrUpdate(List<List<string>> data);
         Task<List<ProductGetDTO>> GetAllProductsByWarehouseAsync(int warehouseId);
         Task<ProductGetDTO?> GetProductByEANAsync(string ean);
+        Task<ProductGetDTO> GetMostSoldProductByWarehouse(int warehouseId);
     }
 
     public class ProductService : IProductService
@@ -187,5 +189,45 @@ namespace ProjectLaborBackend.Services
 
             return _mapper.Map<ProductGetDTO>(product);
         }
+
+        public async Task<ProductGetDTO> GetMostSoldProductByWarehouse(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Include(p => p.StockChanges)
+                .Where(p => p.Stocks.Any(s => s.Warehouse.Id == warehouseId))
+                .ToListAsync();
+
+            double max = 0;
+            Product? maxProduct = null;
+
+            foreach (var product in products)
+            {
+                var stockChanges = product.StockChanges;
+
+                double totalSold = 0;
+
+                foreach (var change in stockChanges)
+                {
+                    if (change.Quantity < 0)
+                    {
+                        double price = product.Stocks
+                            .FirstOrDefault(s => s.Warehouse.Id == warehouseId)?.Price ?? 0;
+
+                        totalSold += Math.Abs(change.Quantity) * price;
+                    }
+                }
+
+                if (totalSold > max)
+                {
+                    max = totalSold;
+                    maxProduct = product;
+                }
+            }
+
+            return _mapper.Map<ProductGetDTO>(maxProduct);
+        }
+
     }
 }

@@ -118,5 +118,18 @@ namespace ProjectLaborBackend.Controllers
                 return NotFound(e.Message);
             }
         }
+
+        [HttpGet("mostsold/{warehouseId}")]
+        public async Task<ActionResult<ProductGetDTO>> MostSoldProductByWarehouse(int warehouseId)
+        {
+            try
+            {
+                return await _productService.GetMostSoldProductByWarehouse(warehouseId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }
