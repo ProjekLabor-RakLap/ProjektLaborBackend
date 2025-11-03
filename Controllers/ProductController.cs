@@ -131,5 +131,18 @@ namespace ProjectLaborBackend.Controllers
                 return BadRequest(e.Message);
             }
         }
+
+        [HttpGet("stuckproducts/{warehouseId}")]
+        public async Task<ActionResult<List<ProductGetDTO>>> StuckProductsByWarehouse(int warehouseId)
+        {
+            try
+            {
+                return await _productService.GetAllStuckProductsAsync(warehouseId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }
