@@ -115,5 +115,18 @@ namespace ProjectLaborBackend.Controllers
         {
             return _warehouseService.GetWarehouseByIdAsync(id) != null;
         }
+
+        [HttpGet("productssold/{warehouseId}")]
+        public async Task<ActionResult<Dictionary<string ,int>>> GetProductsSoldByWarehouse(int warehouseId)
+        {
+            try
+            {
+                return await _warehouseService.GetAllProductsSoldById(warehouseId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

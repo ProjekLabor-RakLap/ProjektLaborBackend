@@ -14,6 +14,7 @@ namespace ProjectLaborBackend.Services
         Task PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto);
         Task DeleteWarehouseAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
+        Task<Dictionary<string, int>> GetAllProductsSoldById(int id);
     }
 
     public class WarehouseService : IWarehouseService
@@ -163,6 +164,17 @@ namespace ProjectLaborBackend.Services
         private bool WarehouseExists(int id)
         {
             return _context.Warehouses.Any(e => e.Id == id);
+        }
+
+        public async Task<Dictionary<string, int>> GetAllProductsSoldById(int id)
+        {
+            var products = await _context.Products.Include(p => p.Stocks).ThenInclude(s => s.Warehouse).Where(p => p.Stocks.Any(s => s.WarehouseId == id)).ToListAsync();
+            Dictionary<string, int> ProductsSold = new Dictionary<string, int>();
+            foreach (var product in products)
+            {
+                ProductsSold.Add(product.Name, Math.Abs(await _context.StockChanges.Where(p => p.Quantity < 0 && p.Product.Id == product.Id).SumAsync(p => p.Quantity)));
+            }
+            return ProductsSold;
         }
     }
 }
