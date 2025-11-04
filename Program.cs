@@ -30,6 +30,7 @@ namespace ProjectLaborBackend
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
 
+
             //Automapper maps
             builder.Services.AddAutoMapper(cfg => { }, typeof(ProductProfile));
             builder.Services.AddAutoMapper(cfg => { }, typeof(WarehouseProfile));
@@ -63,6 +64,7 @@ namespace ProjectLaborBackend
                 });
             });
 
+            builder.Services.AddHostedService<MinimumStockWatch>();
 
             var app = builder.Build();
 

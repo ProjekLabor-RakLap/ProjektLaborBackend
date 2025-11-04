@@ -12,6 +12,7 @@ namespace ProjectLaborBackend.Services
         Task<WarehouseGetDTO> GetWarehouseByIdAsync(int id);
         Task<WarehouseGetDTO> CreateWarehouseAsync(WarehousePostDTO warehouseDto);
         Task<WarehouseGetDTO> PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto);
+        Task<List<WarehouseGetDTO>> GetWarehousesForUser(int id);
         Task DeleteWarehouseAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
     }
@@ -80,7 +81,7 @@ namespace ProjectLaborBackend.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<WarehouseGetDTO>> GetWarehouseForUser(int id)
+        public async Task<List<WarehouseGetDTO>> GetWarehousesForUser(int id)
         {
             List<Warehouse> wareHouses = await _context.Warehouses.Where(x => x.Users.Any(u => u.Id == id)).ToListAsync();
             return _mapper.Map<List<WarehouseGetDTO>>(wareHouses);

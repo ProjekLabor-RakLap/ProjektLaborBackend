@@ -11,6 +11,7 @@ namespace ProjectLaborBackend.Services
     public interface IEmailService
     {
         Task SendEmail(string userEmail, string subject, string template);
+        Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null);
     }
     public class EmailService : IEmailService
     {
@@ -40,6 +41,24 @@ namespace ProjectLaborBackend.Services
                .Subject(subject)
                .UsingTemplateFromFile(template, user)
                .SendAsync();
+        }
+        public async Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null)
+        {
+            var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+            if (userEntity == null)
+                throw new KeyNotFoundException("User with given email does not exist!");
+
+            var user = _mapper.Map<User>(userEntity);
+
+            var finalModel = model ?? user;
+
+            await _fluentEmail
+                .To(userEmail)
+                .Subject(subject)
+                .UsingTemplate(templateBody, finalModel)
+                .SendAsync();
+            Console.WriteLine("Email sent");
         }
     }
 }

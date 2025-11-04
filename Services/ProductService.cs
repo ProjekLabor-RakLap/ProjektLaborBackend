@@ -66,7 +66,7 @@ namespace ProjectLaborBackend.Services
         {
             return _mapper.Map<List<ProductGetDTO>>(await _context.Products.ToListAsync());
         }
-
+        
         public async Task<ProductGetDTO?> GetProductByIdAsync(int id)
         {
             Product? product = await _context.Products.FindAsync(id);
