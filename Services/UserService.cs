@@ -7,6 +7,7 @@ using ProjectLaborBackend.Dtos.UserDTOs;
 using ProjectLaborBackend.Entities;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace ProjectLaborBackend.Services
         Task<List<UserGetDTO>> GetUsersAsync();
         Task<UserGetDTO> GetUserByIdAsync(int id);
         Task<UserGetDTO> RegisterAsync(UserRegisterDTO UserDTO);
-        Task<string> LoginAsync(UserLoginDTO UserDTO);
+        Task<UserGetDTO> LoginAsync(UserLoginDTO UserDTO);
         Task<UserGetDTO> UpdateProfileAsync(int userId, UserPatchDTO UserDTO);
         Task DeleteUser(int id);
         Task<UserGetDTO> ForgotUpdateUserPasswordAsync(ForgotUserPutPasswordDTO UserDTO);
@@ -59,7 +60,7 @@ namespace ProjectLaborBackend.Services
 
             if (u != null)
             {
-                if (u.Email == UserDTO.Email) throw new ArgumentException("Email");
+                if (u.Email == UserDTO.Email) throw new ArgumentException("User with given email already exists!");
             }
 
             if (UserDTO.FirstName.Length > 75 || UserDTO.LastName.Length > 75)
@@ -71,6 +72,19 @@ namespace ProjectLaborBackend.Services
             user.PasswordHash = Argon2.Hash(UserDTO.Password);
             user.IsVerified = false;
 
+            switch (UserDTO.RoleId)
+            {
+                case 0:
+                    user.Role = Role.Admin;
+                    break;
+                case 1:
+                    user.Role = Role.Manager;
+                    break;
+                case 2:
+                    user.Role = Role.Analyst;
+                    break;
+            }
+
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 
@@ -80,7 +94,7 @@ namespace ProjectLaborBackend.Services
             return mapper.Map<UserGetDTO>(user);
         }
 
-        public async Task<string> LoginAsync(UserLoginDTO UserDTO)
+        public async Task<UserGetDTO> LoginAsync(UserLoginDTO UserDTO)
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Email == UserDTO.Email);
             if (user == null || !(Argon2.Verify(user.PasswordHash, UserDTO.Password)))
@@ -88,7 +102,7 @@ namespace ProjectLaborBackend.Services
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
-            return "Logged In";
+            return mapper.Map<UserGetDTO>(user);
             //return await GenerateToken(user);
         }
 
@@ -138,7 +152,7 @@ namespace ProjectLaborBackend.Services
         {
             var user = await context.Users.FindAsync(id);
             if (user == null)
-                return;
+                throw new KeyNotFoundException("User does not exist!");
 
             context.Users.Remove(user);
             await context.SaveChangesAsync();

@@ -58,7 +58,7 @@ namespace ProjectLaborBackend.Entities
         }
     }
 
-    public enum Role { Admin, Manager, Analist}
+    public enum Role { Admin, Manager, Analyst}
 
     public class User
     {

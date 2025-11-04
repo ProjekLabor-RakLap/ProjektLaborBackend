@@ -51,7 +51,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Stock", b =>
@@ -100,7 +100,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasIndex("WarehouseId");
 
-                    b.ToTable("Stocks");
+                    b.ToTable("Stocks", (string)null);
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.StockChange", b =>
@@ -124,7 +124,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("StockChanges");
+                    b.ToTable("StockChanges", (string)null);
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.User", b =>
@@ -162,7 +162,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Warehouse", b =>
@@ -185,7 +185,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Warehouses");
+                    b.ToTable("Warehouses", (string)null);
                 });
 
             modelBuilder.Entity("UserWarehouse", b =>
@@ -200,7 +200,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasIndex("WarehousesId");
 
-                    b.ToTable("UserWarehouse");
+                    b.ToTable("UserWarehouse", (string)null);
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Stock", b =>

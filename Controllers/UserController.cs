@@ -60,8 +60,8 @@ namespace ProjectLaborBackend.Controllers
         {
             try
             {
-                await userService.LoginAsync(userDto);
-                return Ok();
+                var user = await userService.LoginAsync(userDto);
+                return Ok(user);
             }
             catch (UnauthorizedAccessException e) { return Unauthorized(e.Message); }
             catch (Exception e) { return BadRequest(e.Message); }
@@ -124,7 +124,7 @@ namespace ProjectLaborBackend.Controllers
             try
             {
                 await userService.AssignUserWarehouseAsync(userDTO);
-                return Ok(userDTO);
+                return Ok();
             }
             catch (Exception e) { return BadRequest(e.Message); }
         }
@@ -136,7 +136,7 @@ namespace ProjectLaborBackend.Controllers
             try
             {
                 await userService.DeleteUserFromWarehouseAsync(userDTO);
-                return Ok(userDTO);
+                return Ok();
             }
             catch (Exception e) { return BadRequest(e.Message); }
         }
