@@ -10,8 +10,8 @@ namespace ProjectLaborBackend.Services
         Task<List<StockGetDTO>> GetAllStocksAsync();
         Task<List<StockGetWithProductDTO>> GetStocksByWarehouseAsync(int warehouseId);
         Task<StockGetDTO?> GetStockByIdAsync(int id);
-        Task CreateStockAsync(StockCreateDTO stock);
-        Task UpdateStockAsync(int id, StockUpdateDto dto);
+        Task<StockGetDTO> CreateStockAsync(StockCreateDTO stock);
+        Task<StockGetDTO> UpdateStockAsync(int id, StockUpdateDto dto);
         Task DeleteStockAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<StockGetDTO?> GetStockByProductAsync(int productId);
@@ -29,7 +29,7 @@ namespace ProjectLaborBackend.Services
             _mapper = mapper;
         }
 
-        public async Task CreateStockAsync(StockCreateDTO stock)
+        public async Task<StockGetDTO> CreateStockAsync(StockCreateDTO stock)
         {
             if (stock.Currency.Length > 50)
                 throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
@@ -53,6 +53,7 @@ namespace ProjectLaborBackend.Services
 
             await _context.Stocks.AddAsync(_mapper.Map<Stock>(stock));
             await _context.SaveChangesAsync();
+            return _mapper.Map<StockGetDTO>(await _context.Stocks.FirstOrDefaultAsync(o => o.ProductId == stock.ProductId && o.WarehouseId == stock.WarehouseId));
         }
 
         public async Task DeleteStockAsync(int id)
@@ -79,7 +80,7 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<StockGetDTO>(stock);
         }
 
-        public async Task UpdateStockAsync(int id, StockUpdateDto dto)
+        public async Task<StockGetDTO> UpdateStockAsync(int id, StockUpdateDto dto)
         {
             if (dto == null)
                 throw new ArgumentNullException("No data to be changed!");
@@ -165,6 +166,7 @@ namespace ProjectLaborBackend.Services
             {
                 throw new Exception(ex.Message + "\n" + ex.InnerException.Message);
             }
+            return _mapper.Map<StockGetDTO>(stock);
         }
         public void InsertOrUpdate(List<List<string>> data)
         {

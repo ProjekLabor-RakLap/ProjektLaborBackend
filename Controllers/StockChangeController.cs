@@ -70,9 +70,10 @@ namespace ProjectLaborBackend.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchStockChange(int id, StockChangeUpdateDTO stockChange)
         {
+            StockChangeGetDTO? updatedStockChange;
             try
             {
-                await _service.PatchStockChangesAsync(id, stockChange);
+                updatedStockChange = await _service.PatchStockChangesAsync(id, stockChange);
             }
             catch (KeyNotFoundException ex)
             {
@@ -87,7 +88,7 @@ namespace ProjectLaborBackend.Controllers
                 return BadRequest(ex.Message);
             }
 
-            return NoContent();
+            return Ok(updatedStockChange);
         }
 
         // POST: api/StockChanges
