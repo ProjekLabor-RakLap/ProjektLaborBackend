@@ -15,7 +15,7 @@ namespace ProjectLaborBackend.Profiles
                 .ForMember(x => x.WarehouseId, opt => opt.Ignore())
                 .ForMember(x => x.ProductId, opt => opt.Ignore())
                 .ForAllMembers(o => o.Condition((src, dest, srcMember) => srcMember != null));
-
+            CreateMap<Stock, StockGetNoPicDTO>();
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using ProjectLaborBackend.Dtos.Product;
 using ProjectLaborBackend.Dtos.Stock;
+using ProjectLaborBackend.Dtos.StockChange;
 using ProjectLaborBackend.Entities;
 
 namespace ProjectLaborBackend.Services
@@ -16,6 +18,8 @@ namespace ProjectLaborBackend.Services
         void InsertOrUpdate(List<List<string>> data);
         Task<StockGetDTO?> GetStockByProductAsync(int productId);
         Task UpdateStockAfterStockChange(int stockId, int warehouseId, int quantity);
+        Task<StockWarehouseCostGetDTO> WarehouseCost(int warehouseId);
+        Task<StorageCostGetDTO> StorageCost(int warehouseId);
     }
 
     public class StockService : IStockService
@@ -288,5 +292,105 @@ namespace ProjectLaborBackend.Services
                 .ToListAsync();
             return _mapper.Map<List<StockGetWithProductDTO>>(stocks);
         }
+
+        public async Task<StockWarehouseCostGetDTO> WarehouseCost(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Where(p => p.Stocks.Any(s => s.WarehouseId == warehouseId))
+                .ToListAsync();
+
+            var stockWarehouseCost = new StockWarehouseCostGetDTO();
+
+            foreach (var product in products)
+            {
+                var stock = product.Stocks.FirstOrDefault(s => s.WarehouseId == warehouseId);
+                if (stock == null) continue;
+
+                var stockChanges = await _context.StockChanges
+                    .Where(sc => sc.ProductId == product.Id)
+                    .ToListAsync();
+
+                stockWarehouseCost.ProductStockChanges.Add(new ProductStockChangesDTO
+                {
+                    Product = _mapper.Map<ProductGetNoPicDTO>(product),
+                    Stock = _mapper.Map<StockGetNoPicDTO>(stock),
+                    StockChanges = _mapper.Map<List<StockChangeGetDTO>>(stockChanges)
+                });
+            }
+
+            return stockWarehouseCost;
+        }
+
+        public async Task<StorageCostGetDTO> StorageCost(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Where(p => p.Stocks.Any(s => s.WarehouseId == warehouseId))
+                .ToListAsync();
+
+            StorageCostGetDTO storageCostDto = new StorageCostGetDTO
+            {
+                StorageCosts = new List<ProductStorageCostDTO>()
+            };
+
+            DateTime now = DateTime.UtcNow.Date;
+
+            foreach (var product in products)
+            {
+                var stock = product.Stocks.FirstOrDefault(s => s.WarehouseId == warehouseId);
+                if (stock == null) continue;
+
+                var stockChanges = await _context.StockChanges
+                    .Where(sc => sc.ProductId == product.Id)
+                    .OrderBy(sc => sc.ChangeDate)
+                    .ToListAsync();
+
+                var dailyCosts = new List<DailyStorageCostDTO>();
+
+                DateTime startDate = stockChanges.Count > 0
+                    ? stockChanges.First().ChangeDate.Date
+                    : now.AddDays(-30);
+
+                int currentStock = stock.StockInWarehouse;
+
+                int changeIndex = 0;
+                for (DateTime day = startDate; day <= now; day = day.AddDays(1))
+                {
+                    while (changeIndex < stockChanges.Count && stockChanges[changeIndex].ChangeDate.Date == day)
+                    {
+                        currentStock += stockChanges[changeIndex].Quantity;
+                        if (currentStock < 0) currentStock = 0;
+                        changeIndex++;
+                    }
+
+                    double dailyCost = currentStock * stock.StorageCost;
+
+                    dailyCosts.Add(new DailyStorageCostDTO
+                    {
+                        Date = day,
+                        Cost = dailyCost
+                    });
+                }
+
+                storageCostDto.StorageCosts.Add(new ProductStorageCostDTO
+                {
+                    Product = new ProductGetNoPicDTO
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+                        EAN = product.EAN,
+                        Description = product.Description
+                    },
+                    DailyCosts = dailyCosts
+                });
+            }
+
+            return storageCostDto;
+        }
+
+
     }
 }
