@@ -10,8 +10,9 @@ namespace ProjectLaborBackend.Services
     {
         Task<List<WarehouseGetDTO>> GetAllWarehousesAsync();
         Task<WarehouseGetDTO> GetWarehouseByIdAsync(int id);
-        Task CreateWarehouseAsync(WarehousePostDTO warehouseDto);
-        Task PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto);
+        Task<WarehouseGetDTO> CreateWarehouseAsync(WarehousePostDTO warehouseDto);
+        Task<WarehouseGetDTO> PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto);
+        Task<List<WarehouseGetDTO>> GetWarehousesForUser(int id);
         Task DeleteWarehouseAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<Dictionary<string, int>> GetAllProductsSoldById(int id);
@@ -41,7 +42,7 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<List<WarehouseGetDTO>>(wareHouses);
         }
 
-        public async Task CreateWarehouseAsync(WarehousePostDTO warehouseDto)
+        public async Task<WarehouseGetDTO> CreateWarehouseAsync(WarehousePostDTO warehouseDto)
         {
             if(warehouseDto == null)
                 throw new ArgumentNullException("Name or location needed");
@@ -60,7 +61,15 @@ namespace ProjectLaborBackend.Services
 
             Warehouse wareHouse = _mapper.Map<Warehouse>(warehouseDto);
             await _context.Warehouses.AddAsync(wareHouse);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message +"\n" + ex.InnerException.Message);
+            }
+            return _mapper.Map<WarehouseGetDTO>(await _context.Warehouses.FirstOrDefaultAsync(o => o.Location == warehouseDto.Location && o.Name == warehouseDto.Name));
         }
 
         public async Task DeleteWarehouseAsync(int id)
@@ -73,7 +82,13 @@ namespace ProjectLaborBackend.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto)
+        public async Task<List<WarehouseGetDTO>> GetWarehousesForUser(int id)
+        {
+            List<Warehouse> wareHouses = await _context.Warehouses.Where(x => x.Users.Any(u => u.Id == id)).ToListAsync();
+            return _mapper.Map<List<WarehouseGetDTO>>(wareHouses);
+        }
+
+        public async Task<WarehouseGetDTO> PatchWarehouseAsync(int id, WarehouseUpdateDTO warehouseDto)
         {
             if(warehouseDto == null)
                 throw new ArgumentNullException("Empty object passed");
@@ -106,6 +121,11 @@ namespace ProjectLaborBackend.Services
                     throw;
                 }
             }
+            catch(Exception ex)
+            {
+                throw;
+            }
+            return _mapper.Map<WarehouseGetDTO>(wareHouse);
         }
 
         public void InsertOrUpdate(List<List<string>> data)

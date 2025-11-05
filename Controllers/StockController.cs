@@ -49,25 +49,27 @@ namespace ProjectLaborBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<StockCreateDTO>> CreateStock([FromBody] StockCreateDTO stock)
         {
+            StockGetDTO? createdStock;
             try
             {
-                await _stockService.CreateStockAsync(stock);
+                createdStock = await _stockService.CreateStockAsync(stock);
             }
             catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
 
-            return Ok("Stock created!");
+            return Ok(createdStock);
         }
 
         // PUT api/<StockController>/5
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateStock(int id, [FromBody] StockUpdateDto stock)
         {
+            StockGetDTO? updatedStock;
             try
             {
-                await _stockService.UpdateStockAsync(id, stock);
+                updatedStock = await _stockService.UpdateStockAsync(id, stock);
             }
             catch (KeyNotFoundException ex)
             {
@@ -77,7 +79,7 @@ namespace ProjectLaborBackend.Controllers
             {
                 return BadRequest(e.Message);
             }
-            return NoContent();
+            return Ok(updatedStock);
         }
 
         // DELETE api/<StockController>/5

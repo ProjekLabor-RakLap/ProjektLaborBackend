@@ -30,6 +30,7 @@ namespace ProjectLaborBackend
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
 
+
             //Automapper maps
             builder.Services.AddAutoMapper(cfg => { }, typeof(ProductProfile));
             builder.Services.AddAutoMapper(cfg => { }, typeof(WarehouseProfile));
@@ -58,10 +59,12 @@ namespace ProjectLaborBackend
                 // HTTPS minden IP-re
                 options.ListenAnyIP(7116, listenOptions =>
                 {
-                    listenOptions.UseHttps(); // Self-signed cert
+                    listenOptions.UseHttps();
+
                 });
             });
 
+            builder.Services.AddHostedService<MinimumStockWatch>();
 
             var app = builder.Build();
 

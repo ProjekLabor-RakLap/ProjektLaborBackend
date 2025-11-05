@@ -12,8 +12,8 @@ namespace ProjectLaborBackend.Services
     {
         Task<List<ProductGetDTO>> GetAllProductsAsync();
         Task<ProductGetDTO?> GetProductByIdAsync(int id);
-        Task CreateProductAsync(ProductCreateDTO product);
-        Task UpdateProductAsync(int id, ProductUpdateDTO dto);
+        Task<ProductGetDTO> CreateProductAsync(ProductCreateDTO product);
+        Task<ProductGetDTO?> UpdateProductAsync(int id, ProductUpdateDTO dto);
         Task DeleteProductAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<List<ProductGetDTO>> GetAllProductsByWarehouseAsync(int warehouseId);
@@ -33,7 +33,7 @@ namespace ProjectLaborBackend.Services
             _mapper = mapper;
         }
 
-        public async Task CreateProductAsync(ProductCreateDTO product)
+        public async Task<ProductGetDTO> CreateProductAsync(ProductCreateDTO product)
         {
             if (product.EAN.Length > 20)
                 throw new ArgumentException("EAN must be 20 characters or less!");
@@ -52,6 +52,7 @@ namespace ProjectLaborBackend.Services
 
             await _context.Products.AddAsync(_mapper.Map<Product>(product));
             await _context.SaveChangesAsync();
+            return _mapper.Map<ProductGetDTO>(await _context.Products.FirstOrDefaultAsync(o => o.EAN == product.EAN));
         }
 
         public async Task DeleteProductAsync(int id)
@@ -68,7 +69,7 @@ namespace ProjectLaborBackend.Services
         {
             return _mapper.Map<List<ProductGetDTO>>(await _context.Products.ToListAsync());
         }
-
+        
         public async Task<ProductGetDTO?> GetProductByIdAsync(int id)
         {
             Product? product = await _context.Products.FindAsync(id);
@@ -78,7 +79,7 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<ProductGetDTO>(product);
         }
 
-        public async Task UpdateProductAsync(int id, ProductUpdateDTO dto)
+        public async Task<ProductGetDTO?> UpdateProductAsync(int id, ProductUpdateDTO dto)
         {
             if (dto == null)
                 throw new ArgumentNullException("No data to be changed!");
@@ -109,6 +110,7 @@ namespace ProjectLaborBackend.Services
             {
                 throw;
             }
+            return _mapper.Map<ProductGetDTO>(await _context.Products.FindAsync(id));
         }
 
         public void InsertOrUpdate(List<List<string>> data)

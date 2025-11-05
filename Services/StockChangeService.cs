@@ -11,8 +11,8 @@ namespace ProjectLaborBackend.Services
         Task<List<StockChangeGetDTO>> GetAllStockChangeAsync();
         Task<StockChangeGetDTO> GetStockChangeByIdAsync(int id);
         Task<List<StockChangeGetDTO>> GetStockChangeByWarehouseAsync(int warehouseId);
-        Task CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto);
-        Task PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto);
+        Task<StockChangeGetDTO> CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto);
+        Task<StockChangeGetDTO> PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto);
         Task DeleteStockChangeAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<List<StockChangeGetDTO>> GetStockChangesByProductAsync(int productId, int warehouseId);
@@ -48,7 +48,7 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<List<StockChangeGetDTO>>(stockChanges);
         }
 
-        public async Task CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto)
+        public async Task<StockChangeGetDTO> CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto)
         {
             if (stockChangeDto == null)
                 throw new ArgumentNullException("Quantity, ChangeDate or ProductId needed");
@@ -70,9 +70,10 @@ namespace ProjectLaborBackend.Services
             StockChange stockChange = _mapper.Map<StockChange>(stockChangeDto);
             await _context.StockChanges.AddAsync(stockChange);
             await _context.SaveChangesAsync();
+            return _mapper.Map<StockChangeGetDTO>(await _context.StockChanges.FirstOrDefaultAsync(o => o.ProductId == stockChangeDto.ProductId && o.ChangeDate == stockChangeDto.ChangeDate));
         }
 
-        public async Task PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto)
+        public async Task<StockChangeGetDTO> PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto)
         {
             if (stockChangeDto == null)
                 throw new ArgumentNullException("Quantity, ChangeDate or ProductId needed");
@@ -105,6 +106,7 @@ namespace ProjectLaborBackend.Services
                     throw;
                 }
             }
+            return _mapper.Map<StockChangeGetDTO>(stockChange);
         }
 
         public async Task DeleteStockChangeAsync(int id)

@@ -46,26 +46,27 @@ namespace ProjectLaborBackend.Controllers
         public async Task<ActionResult<ProductCreateDTO>> CreateProduct([FromBody] ProductCreateDTO product)
         {
             // TODO!!! Check if EAN already exists
-
+            ProductGetDTO? ceratedProduct;
             try
             {
-                await _productService.CreateProductAsync(product);
+                ceratedProduct = await _productService.CreateProductAsync(product);
             }
             catch (Exception e)
             {
                 return BadRequest($"{e.Message}, {e.InnerException}");
             }
 
-            return Ok("Product created");
+            return Ok(ceratedProduct);
         }
 
         // PATCH api/<ProductController>/5
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDTO product)
         {
+            ProductGetDTO? updatedProduct;
             try
             {
-                await _productService.UpdateProductAsync(id, product);
+                updatedProduct = await _productService.UpdateProductAsync(id, product);
             }
             catch (KeyNotFoundException ex)
             {
@@ -75,7 +76,7 @@ namespace ProjectLaborBackend.Controllers
             {
                 return BadRequest(e.Message);
             }
-            return NoContent();
+            return Ok(updatedProduct);
         }
 
         // DELETE api/<ProductController>/5
