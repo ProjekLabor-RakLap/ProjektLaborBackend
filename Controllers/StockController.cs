@@ -114,5 +114,31 @@ namespace ProjectLaborBackend.Controllers
                 return NotFound(e.Message);
             }
         }
+
+        [HttpGet("warehousecost/{warehouseId}")]
+        public async Task<ActionResult<StockWarehouseCostGetDTO>> GetWarehouseCost(int warehouseId)
+        {
+            try
+            {
+                return await _stockService.WarehouseCost(warehouseId);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
+
+        [HttpGet("storagecost/{warehouseId}")]
+        public async Task<ActionResult<StorageCostGetDTO>> GetStorageCost(int warehouseId)
+        {
+            try
+            {
+                return await _stockService.StorageCost(warehouseId);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
     }
 }
