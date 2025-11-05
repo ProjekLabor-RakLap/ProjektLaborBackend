@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjectLaborBackend.Entities;
 
@@ -11,9 +12,11 @@ using ProjectLaborBackend.Entities;
 namespace ProjectLaborBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251105143651_added_producktid_to_emaillog")]
+    partial class added_producktid_to_emaillog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,12 +121,6 @@ namespace ProjectLaborBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("WarehouseId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToNotify")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToWarn")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

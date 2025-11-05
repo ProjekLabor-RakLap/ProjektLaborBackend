@@ -12,5 +12,7 @@
         public string Currency { get; set; }
         public int ProductId { get; set; }
         public int WarehouseId { get; set; }
+        public int? WhenToNotify { get; set; }
+        public int? WhenToWarn { get; set; }
     }
 }

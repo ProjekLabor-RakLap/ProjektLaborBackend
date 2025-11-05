@@ -14,6 +14,7 @@ namespace ProjectLaborBackend.Entities
         public DbSet<Product> Products { get; set; }
         public DbSet<StockChange> StockChanges { get; set; }
 
+        public DbSet<EmailLog> EmailLogs { get; set; }
         public enum Tables
         {
             Products,
@@ -137,6 +138,8 @@ namespace ProjectLaborBackend.Entities
         [StringLength(50)]
         public string Currency { get; set; }
         public int WarehouseId { get; set; }
+        public int? WhenToNotify { get; set; }
+        public int? WhenToWarn { get; set; }
         public Warehouse Warehouse { get; set; }
 
         public int ProductId { get; set; }
@@ -153,5 +156,26 @@ namespace ProjectLaborBackend.Entities
         public DateTime ChangeDate { get; set; } = DateTime.Now;
         public int ProductId { get; set; }
         public Product Product { get; set; }
+    }
+
+    public enum EmailType
+    {
+        Verification,
+        PasswordReset,
+        LowStockNotification,
+        LowStockWarning
+    }
+
+    public class EmailLog
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        [EmailAddress]
+        public string RecipientEmail { get; set; }
+        public EmailType EmailType { get; set; }
+        [DataType(DataType.DateTime)]
+        public DateTime SentDate { get; set; } = DateTime.Now;
+        public int ProductId { get; set; }
     }
 }

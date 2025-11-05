@@ -11,14 +11,15 @@ namespace ProjectLaborBackend.Services
     public interface IEmailService
     {
         Task SendEmail(string userEmail, string subject, string template);
+        Task SendEmail(string userEmail, string subject, string templateBody, object? model = null);
         Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null);
     }
     public class EmailService : IEmailService
     {
-        private IFluentEmail _fluentEmail;
+        private IFluentEmailFactory _fluentEmail;
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public EmailService(IFluentEmail fluentEmail, AppDbContext context, IMapper mapper)
+        public EmailService(IFluentEmailFactory fluentEmail, AppDbContext context, IMapper mapper)
         {
             _fluentEmail = fluentEmail;
             _context = context;
@@ -37,11 +38,34 @@ namespace ProjectLaborBackend.Services
             var user = _mapper.Map<User>(UserDTO);
 
             await _fluentEmail
+               .Create()
                .To(userEmail)
                .Subject(subject)
                .UsingTemplateFromFile(template, user)
                .SendAsync();
         }
+
+        public async Task SendEmail(string userEmail, string subject, string template, object? model = null)
+        {
+            var UserDTO = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+            if (UserDTO == null)
+            {
+                throw new KeyNotFoundException("User with given email does not exist!");
+            }
+
+            var user = _mapper.Map<User>(UserDTO);
+
+            var finalModel = model ?? user;
+
+            await _fluentEmail
+               .Create()
+               .To(userEmail)
+               .Subject(subject)
+               .UsingTemplateFromFile(template, finalModel)
+               .SendAsync();
+        }
+
         public async Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null)
         {
             var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
@@ -54,11 +78,12 @@ namespace ProjectLaborBackend.Services
             var finalModel = model ?? user;
 
             await _fluentEmail
+                .Create()
                 .To(userEmail)
                 .Subject(subject)
                 .UsingTemplate(templateBody, finalModel)
                 .SendAsync();
-            Console.WriteLine("Email sent");
+            Console.WriteLine($"\n\n\n Email sent | userEmail: {userEmail} | user.email: {user.Email}\n\n\n");
         }
     }
 }
