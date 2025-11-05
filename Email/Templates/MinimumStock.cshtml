@@ -1,130 +1,31 @@
-﻿@model ProjectLaborBackend.Entities.Product
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Elfogyó termék értesítés - RakLap</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f9fafb;
-        }
-
-        .container {
-            max-width: 680px;
-            margin: 28px auto;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(22,28,37,0.06);
-            overflow: hidden;
-        }
-
-        .header {
-            padding: 20px;
-            text-align: center;
-            background: #b91c1c;
-            color: #fff;
-        }
-
-            .header h1 {
-                margin: 0;
-                font-size: 20px;
-            }
-
-        .content {
-            padding: 26px;
-            color: #0f172a;
-        }
-
-        .highlight {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            padding: 12px 16px;
-            border-radius: 6px;
-            color: #7f1d1d;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .btn-action {
-            background: #dc2626;
-            color: #fff;
-        }
-
-        .muted {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .footer {
-            padding: 18px 26px;
-            font-size: 13px;
-            color: #6b7280;
-            background: #fbfcfd;
-        }
-
-        .stock-info {
-            margin: 16px 0;
-            border-left: 4px solid #dc2626;
-            padding-left: 12px;
-            color: #374151;
-        }
-
-        .product-name {
-            font-weight: 600;
-            color: #b91c1c;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #eef2f6;
-            margin: 22px 0;
-        }
-    </style>
-</head>
+﻿@using System.Linq
+@model ProjectLaborBackend.Email.StockEmailModel
+<html>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚠️ Elfogyó termék értesítés</h1>
-        </div>
-        <div class="content">
-            <p>Szia <strong>@Model.Name</strong> kezelő!</p>
+    <h2>@Model.Name</h2>
+    <p>Az alábbi termékek készlete alacsony:</p>
+    <ul>
+        @if (Model.WarningStocks.Any())
+        {
+            <li><strong>Kritikus szint:</strong></li>
+            <ul>
+                @foreach (var item in Model.WarningStocks)
+                {
+                    <li><b>@item.ProductName</b>: @item.Stock / @item.Capacity db (Kritikus)</li>
+                }
+            </ul>
+        }
 
-            <div class="highlight">
-                <p><strong>@Model.Name</strong> (EAN: @Model.EAN) készlete alacsony szintre csökkent.</p>
-            </div>
-
-            <div class="stock-info">
-                <p><strong>Jelenlegi készlet:</strong> @Model.Stocks.FirstOrDefault()?.StockInWarehouse db</p>
-                <p><strong>Minimális raktárkészlet:</strong> 20 db</p>
-            </div>
-
-            <p class="muted">Kérjük, fontold meg az újrarendelést, hogy a termék folyamatosan elérhető maradjon.</p>
-
-            <p style="text-align:center; margin:22px 0;">
-                <a href="https://localhost:3000/products/@Model.Id" class="button btn-action">Termék megtekintése</a>
-            </p>
-
-            <hr />
-
-            <p>Ha ez az üzenet tévesen érkezett, kérjük, ne válaszolj erre az e-mailre.</p>
-
-            <p>Üdvözlettel, <br /><strong>a RakLap csapata</strong></p>
-        </div>
-
-        <div class="footer">
-            <div>Ez egy automatikus értesítés a készletfigyelő rendszerből.</div>
-            <div style="margin-top:8px;">© 2025 RakLap</div>
-        </div>
-    </div>
+        @if (Model.NotificationStocks.Any())
+        {
+            <li><strong>Alacsony szint:</strong></li>
+            <ul>
+                @foreach (var item in Model.NotificationStocks)
+                {
+                    <li><b>@item.ProductName</b>: @item.Stock / @item.Capacity db</li>
+                }
+            </ul>
+        }
+    </ul>
 </body>
 </html>

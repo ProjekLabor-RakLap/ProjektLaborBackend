@@ -14,6 +14,8 @@ namespace ProjectLaborBackend.Dtos.Stock
         public double TransportCost { get; set; }
         public double StorageCost { get; set; }
         public string Currency { get; set; }
+        public int? WhenToNotify { get; set; } = 0;
+        public int? WhenToWarn { get; set; } = 0;
         public ProductGetDTO Product { get; set; }
         public WarehouseGetDTO Warehouse { get; set; }
     }

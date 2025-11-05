@@ -95,7 +95,7 @@ namespace ProjectLaborBackend.Services
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
                 if (!_context.StockChanges.Any(e => e.Id == id))
                 {
@@ -103,7 +103,7 @@ namespace ProjectLaborBackend.Services
                 }
                 else
                 {
-                    throw;
+                    throw new Exception(ex.Message + "\n" + ex.InnerException.Message);
                 }
             }
             return _mapper.Map<StockChangeGetDTO>(stockChange);
