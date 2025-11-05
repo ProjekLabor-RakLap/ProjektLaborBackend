@@ -11,6 +11,8 @@ namespace ProjectLaborBackend.Dtos.Stock
         public int StoreCapacity { get; set; }
         public double Price { get; set; }
         public string Currency { get; set; }
+        public int? WhenToNotify { get; set; } = 0;
+        public int? WhenToWarn { get; set; } = 0;
         public ProductGetNoPicDTO Product { get; set; }
     }
 }
