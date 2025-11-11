@@ -4,9 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ProjectLaborBackend.Dtos.UserDTOs;
+using ProjectLaborBackend.Email;
+using ProjectLaborBackend.Email.Models;
 using ProjectLaborBackend.Entities;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 
@@ -17,10 +20,11 @@ namespace ProjectLaborBackend.Services
         Task<List<UserGetDTO>> GetUsersAsync();
         Task<UserGetDTO> GetUserByIdAsync(int id);
         Task<UserGetDTO> RegisterAsync(UserRegisterDTO UserDTO);
-        Task<string> LoginAsync(UserLoginDTO UserDTO);
+        Task<UserGetDTO> LoginAsync(UserLoginDTO UserDTO);
         Task<UserGetDTO> UpdateProfileAsync(int userId, UserPatchDTO UserDTO);
         Task DeleteUser(int id);
         Task<UserGetDTO> ForgotUpdateUserPasswordAsync(ForgotUserPutPasswordDTO UserDTO);
+        Task<string> GeneratePwdResetToken(int id);
         Task<UserGetDTO> UpdateUserPasswordAsync(UserPutPasswordDTO UserDTO);
         Task AssignUserWarehouseAsync(UserAssignWarehouseDTO UserDTO);
         Task DeleteUserFromWarehouseAsync(UserAssignWarehouseDTO UserDTO);
@@ -59,7 +63,7 @@ namespace ProjectLaborBackend.Services
 
             if (u != null)
             {
-                if (u.Email == UserDTO.Email) throw new ArgumentException("Email");
+                if (u.Email == UserDTO.Email) throw new ArgumentException("User with given email already exists!");
             }
 
             if (UserDTO.FirstName.Length > 75 || UserDTO.LastName.Length > 75)
@@ -71,16 +75,29 @@ namespace ProjectLaborBackend.Services
             user.PasswordHash = Argon2.Hash(UserDTO.Password);
             user.IsVerified = false;
 
+            switch (UserDTO.RoleId)
+            {
+                case 0:
+                    user.Role = Role.Admin;
+                    break;
+                case 1:
+                    user.Role = Role.Manager;
+                    break;
+                case 2:
+                    user.Role = Role.Analyst;
+                    break;
+            }
+
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 
             string templatePath = $"{Directory.GetCurrentDirectory()}/Email/Templates/Welcome.cshtml";
-            await _emailService.SendEmail(user.Email, "Üdvözlünk a RakLapnál!", templatePath);
+            await _emailService.SendEmail(user.Email, "Üdvözlünk a RakLapnál!", templatePath, user);
 
             return mapper.Map<UserGetDTO>(user);
         }
 
-        public async Task<string> LoginAsync(UserLoginDTO UserDTO)
+        public async Task<UserGetDTO> LoginAsync(UserLoginDTO UserDTO)
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Email == UserDTO.Email);
             if (user == null || !(Argon2.Verify(user.PasswordHash, UserDTO.Password)))
@@ -88,7 +105,7 @@ namespace ProjectLaborBackend.Services
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
-            return "Logged In";
+            return mapper.Map<UserGetDTO>(user);
             //return await GenerateToken(user);
         }
 
@@ -138,24 +155,69 @@ namespace ProjectLaborBackend.Services
         {
             var user = await context.Users.FindAsync(id);
             if (user == null)
-                return;
+                throw new KeyNotFoundException("User does not exist!");
 
             context.Users.Remove(user);
             await context.SaveChangesAsync();
         }
 
-        public async Task<UserGetDTO> ForgotUpdateUserPasswordAsync(ForgotUserPutPasswordDTO UserDTO)
+        public async Task<string> GeneratePwdResetToken(int id)
         {
-            var user = await context.Users.FirstOrDefaultAsync(x => x.Email == UserDTO.Email);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var token = new PwdResetToken
+            {
+                User = user,
+                UserId = user.Id,
+                Token = Guid.NewGuid().ToString(),
+                Expiration = DateTime.Now.AddHours(1)
+            };
+
+            var emailModel = new PasswordResetEmailModel
+            {
+                User = user,
+                Token = token.Token
+            };
+
+            //this should be added to users tokens but it works without it,
+            //so for now it's not getting added
+            //user.ResetTokens.Add(token);  
+
+            context.PwdResetTokens.Add(token);
+            await context.SaveChangesAsync();
+
+            string templatePath = $"{Directory.GetCurrentDirectory()}/Email/Templates/PasswordReset.cshtml";
+            await _emailService.SendEmail(user.Email, "RakLap Jelszóvisszaállítás", templatePath, emailModel);
+            return token.Token;
+        }
+
+        public async Task<UserGetDTO> ForgotUpdateUserPasswordAsync(ForgotUserPutPasswordDTO dto)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (user == null)
             {
                 throw new KeyNotFoundException("This user does not exists.");
             }
-            if (Argon2.Verify(user.PasswordHash, UserDTO.Password))
+
+            var token = await context.PwdResetTokens.FirstOrDefaultAsync(t => t.Token == dto.Token);
+            if (token == null)
             {
-                return mapper.Map<UserGetDTO>(user);
+                throw new Exception("Invalid token!");
             }
-            user.PasswordHash = Argon2.Hash(UserDTO.Password);
+
+            if (token.UserId != user.Id)
+            {
+                throw new Exception("Invalid Email!");
+            }
+
+            if (token.Expiration < DateTime.Now)
+            {
+                throw new Exception("Token already expired!");
+            }
+
+            user.PasswordHash = Argon2.Hash(dto.Password);
+            
+            context.PwdResetTokens.Remove(token);
+
             await context.SaveChangesAsync();
 
             return mapper.Map<UserGetDTO>(user);

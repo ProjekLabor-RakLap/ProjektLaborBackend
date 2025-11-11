@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjectLaborBackend.Entities;
 
@@ -11,9 +12,11 @@ using ProjectLaborBackend.Entities;
 namespace ProjectLaborBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111084411_Pwd-Reset-Tokens")]
+    partial class PwdResetTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,32 +24,6 @@ namespace ProjectLaborBackend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ProjectLaborBackend.Entities.EmailLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("EmailType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RecipientEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SentDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EmailLogs");
-                });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Product", b =>
                 {
@@ -102,7 +79,7 @@ namespace ProjectLaborBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PwdResetTokens");
+                    b.ToTable("PwdResetToken");
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Stock", b =>
@@ -143,12 +120,6 @@ namespace ProjectLaborBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("WarehouseId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToNotify")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToWarn")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
