@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjectLaborBackend.Entities;
 
@@ -11,9 +12,11 @@ using ProjectLaborBackend.Entities;
 namespace ProjectLaborBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251105143651_added_producktid_to_emaillog")]
+    partial class added_producktid_to_emaillog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,31 +83,6 @@ namespace ProjectLaborBackend.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("ProjectLaborBackend.Entities.PwdResetToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Expiration")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PwdResetTokens");
-                });
-
             modelBuilder.Entity("ProjectLaborBackend.Entities.Stock", b =>
                 {
                     b.Property<int>("Id")
@@ -143,12 +121,6 @@ namespace ProjectLaborBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("WarehouseId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToNotify")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("WhenToWarn")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -260,17 +232,6 @@ namespace ProjectLaborBackend.Migrations
                     b.ToTable("UserWarehouse");
                 });
 
-            modelBuilder.Entity("ProjectLaborBackend.Entities.PwdResetToken", b =>
-                {
-                    b.HasOne("ProjectLaborBackend.Entities.User", "User")
-                        .WithMany("ResetTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ProjectLaborBackend.Entities.Stock", b =>
                 {
                     b.HasOne("ProjectLaborBackend.Entities.Product", "Product")
@@ -321,11 +282,6 @@ namespace ProjectLaborBackend.Migrations
                     b.Navigation("StockChanges");
 
                     b.Navigation("Stocks");
-                });
-
-            modelBuilder.Entity("ProjectLaborBackend.Entities.User", b =>
-                {
-                    b.Navigation("ResetTokens");
                 });
 
             modelBuilder.Entity("ProjectLaborBackend.Entities.Warehouse", b =>

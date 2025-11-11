@@ -1,8 +1,9 @@
 ﻿using ProjectLaborBackend.Dtos.Product;
+using ProjectLaborBackend.Dtos.Warehouse;
 
 namespace ProjectLaborBackend.Dtos.Stock
 {
-    public class StockGetWithProductDTO
+    public class StockGetNoPicDTO
     {
         public int Id { get; set; }
         public int StockInWarehouse { get; set; }
@@ -10,9 +11,12 @@ namespace ProjectLaborBackend.Dtos.Stock
         public int WarehouseCapacity { get; set; }
         public int StoreCapacity { get; set; }
         public double Price { get; set; }
+        public double TransportCost { get; set; }
+        public double StorageCost { get; set; }
         public string Currency { get; set; }
         public int? WhenToNotify { get; set; } = 0;
         public int? WhenToWarn { get; set; } = 0;
         public ProductGetNoPicDTO Product { get; set; }
+        public WarehouseGetDTO Warehouse { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace ProjectLaborBackend.Entities
         public DbSet<StockChange> StockChanges { get; set; }
         public DbSet<PwdResetToken> PwdResetTokens { get; set; }
 
+        public DbSet<EmailLog> EmailLogs { get; set; }
         public enum Tables
         {
             Products,
@@ -144,6 +145,8 @@ namespace ProjectLaborBackend.Entities
         [StringLength(50)]
         public string Currency { get; set; }
         public int WarehouseId { get; set; }
+        public int? WhenToNotify { get; set; }
+        public int? WhenToWarn { get; set; }
         public Warehouse Warehouse { get; set; }
 
         public int ProductId { get; set; }
@@ -162,7 +165,24 @@ namespace ProjectLaborBackend.Entities
         public Product Product { get; set; }
     }
 
-    public class PwdResetToken
+    public class PwdResetToken 
+    {
+        public string Token { get; set; }
+        [DataType(DataType.DateTime)]
+        public DateTime Expiration { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+    }
+  
+    public enum EmailType
+    {
+        Verification,
+        PasswordReset,
+        LowStockNotification,
+        LowStockWarning
+    }
+
+    public class EmailLog
     {
         [Key]
         public int Id { get; set; }

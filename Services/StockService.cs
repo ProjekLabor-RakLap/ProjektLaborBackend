@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using ProjectLaborBackend.Dtos.Product;
 using ProjectLaborBackend.Dtos.Stock;
+using ProjectLaborBackend.Dtos.StockChange;
 using ProjectLaborBackend.Entities;
 
 namespace ProjectLaborBackend.Services
@@ -10,12 +12,14 @@ namespace ProjectLaborBackend.Services
         Task<List<StockGetDTO>> GetAllStocksAsync();
         Task<List<StockGetWithProductDTO>> GetStocksByWarehouseAsync(int warehouseId);
         Task<StockGetDTO?> GetStockByIdAsync(int id);
-        Task CreateStockAsync(StockCreateDTO stock);
-        Task UpdateStockAsync(int id, StockUpdateDto dto);
+        Task<StockGetDTO> CreateStockAsync(StockCreateDTO stock);
+        Task<StockGetDTO> UpdateStockAsync(int id, StockUpdateDto dto);
         Task DeleteStockAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<StockGetDTO?> GetStockByProductAsync(int productId);
         Task UpdateStockAfterStockChange(int stockId, int warehouseId, int quantity);
+        Task<StockWarehouseCostGetDTO> WarehouseCost(int warehouseId);
+        Task<StorageCostGetDTO> StorageCost(int warehouseId);
     }
 
     public class StockService : IStockService
@@ -29,7 +33,7 @@ namespace ProjectLaborBackend.Services
             _mapper = mapper;
         }
 
-        public async Task CreateStockAsync(StockCreateDTO stock)
+        public async Task<StockGetDTO> CreateStockAsync(StockCreateDTO stock)
         {
             if (stock.Currency.Length > 50)
                 throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
@@ -51,8 +55,17 @@ namespace ProjectLaborBackend.Services
             if (product == null)
                 throw new KeyNotFoundException("Warehouse with that id does not exist!");
 
+            if(stock.WhenToWarn != null && stock.WhenToNotify != null)
+            {
+                if(stock.WhenToWarn > stock.WhenToNotify)
+                {
+                    throw new ArgumentException("When to warn percentage cannot be greater than when to notify percentage!");
+                }
+            }
+
             await _context.Stocks.AddAsync(_mapper.Map<Stock>(stock));
             await _context.SaveChangesAsync();
+            return _mapper.Map<StockGetDTO>(await _context.Stocks.FirstOrDefaultAsync(o => o.ProductId == stock.ProductId && o.WarehouseId == stock.WarehouseId));
         }
 
         public async Task DeleteStockAsync(int id)
@@ -79,61 +92,50 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<StockGetDTO>(stock);
         }
 
-        public async Task UpdateStockAsync(int id, StockUpdateDto dto)
+        public async Task<StockGetDTO> UpdateStockAsync(int id, StockUpdateDto dto)
         {
             if (dto == null)
                 throw new ArgumentNullException("No data to be changed!");
 
-            if (dto.Currency != null && dto.Currency.Length > 50) //50???? 9 a leghosszabb a világon...
-                throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
-
             Stock? stock = await _context.Stocks.FindAsync(id);
             if (stock == null)
                 throw new KeyNotFoundException("Stock not found!");
+            
+            if (dto.Currency != null && dto.Currency.Length > 50) //50???? 9 a leghosszabb a világon...
+                throw new ArgumentOutOfRangeException("Currency cannot exceed 50 characters!");
+            else if (dto.Currency == null)
+                dto.Currency = stock.Currency;
 
-            if (dto.StoreCapacity != null && dto.StockInStore != null)
-            {
-                if (dto.StockInStore > dto.StoreCapacity)
-                {
-                    throw new Exception("Stock in store cannot exceed its capacity!");
-                }
-            }
-            else if (dto.StoreCapacity != null)
-            {
-                if (stock.StockInStore > dto.StoreCapacity)
-                {
-                    throw new Exception("Stock capacity cannot exceed the stock in store!");
-                }
-            }
-            else if (dto.StockInStore != null)
-            {
-                if (dto.StockInStore > stock.StoreCapacity)
-                {
-                    throw new Exception("Stock in store cannot exceed its capacity!");
-                }
-            }
 
-            if (dto.WarehouseCapacity != null && dto.StockInWarehouse != null)
-            {
-                if (dto.StockInWarehouse > dto.WarehouseCapacity)
-                {
-                    throw new Exception("Stock in warehouse cannot exceed its capacity!");
-                }
-            }
-            else if (dto.WarehouseCapacity != null)
-            {
-                if (stock.StockInWarehouse > dto.WarehouseCapacity)
-                {
-                    throw new Exception("Stock capacity cannot exceed the stock in warehouse!");
-                }
-            }
-            else if (dto.StockInWarehouse != null)
-            {
-                if (dto.StockInWarehouse > stock.WarehouseCapacity)
-                {
-                    throw new Exception("Stock in warehouse cannot exceed its capacity!");
-                }
-            }
+            var newStoreCapacity = dto.StoreCapacity ?? stock.StoreCapacity;
+            var newStoreStock = dto.StockInStore ?? stock.StockInStore;
+
+            if (newStoreStock < 0)
+                throw new ArgumentOutOfRangeException("Stock in store cannot be negative!");
+            if (newStoreCapacity <= 0)
+                throw new ArgumentOutOfRangeException("Store capacity cannot be equal or less than 0!");
+
+            if (newStoreStock > newStoreCapacity)
+                throw new Exception("Stock in store cannot exceed its capacity!");
+
+            dto.StoreCapacity = newStoreCapacity;
+            dto.StockInStore = newStoreStock;
+            
+
+
+            var newWarehouseCapacity = dto.WarehouseCapacity ?? stock.WarehouseCapacity;
+            var newWarehouseStock = dto.StockInWarehouse ?? stock.StockInWarehouse;
+
+            if (newWarehouseStock < 0)
+                throw new ArgumentOutOfRangeException("Stock in warehouse cannot be negative!");
+            if (newWarehouseCapacity <= 0)
+                throw new ArgumentOutOfRangeException("Warehouse capacity cannot be equal or less than 0!");
+            if (newWarehouseStock > newWarehouseCapacity)
+                throw new ArgumentException("Stock in warehouse cannot exceed its capacity!");
+            
+            dto.WarehouseCapacity = newWarehouseCapacity;
+            dto.StockInWarehouse = newWarehouseStock;
+
 
             if (dto.WarehouseId != null)
             {
@@ -143,6 +145,11 @@ namespace ProjectLaborBackend.Services
                     throw new KeyNotFoundException($"Warehouse with {dto.WarehouseId} id does not exist!");
                 }
             }
+            else
+            {
+                dto.WarehouseId = stock.WarehouseId;
+            }
+
 
             if (dto.ProductId != null)
             {
@@ -152,10 +159,28 @@ namespace ProjectLaborBackend.Services
                     throw new KeyNotFoundException($"Product with {dto.ProductId} id does not exist!");
                 }
             }
+            else
+            {
+                dto.ProductId = stock.ProductId;
+            }
+
+
+            var newWarn = dto.WhenToWarn ?? stock.WhenToWarn ?? 0;
+            var newNotify = dto.WhenToNotify ?? stock.WhenToNotify ?? 100;
+
+            if (newWarn > newNotify)
+                throw new ArgumentException("When to warn percentage cannot be greater than when to notify percentage!");
+          
+            dto.WhenToWarn = newWarn;
+            dto.WhenToNotify = newNotify;           
+
+
+            if(dto.Currency == null) 
+                dto.Currency = stock.Currency;
+            if(dto.Price == null) 
+                dto.Price = stock.Price;
 
             _mapper.Map(dto, stock);
-            stock.WarehouseId = dto.WarehouseId ?? stock.WarehouseId;
-            stock.ProductId = dto.ProductId ?? stock.ProductId;
 
             try
             {
@@ -165,6 +190,7 @@ namespace ProjectLaborBackend.Services
             {
                 throw new Exception(ex.Message + "\n" + ex.InnerException.Message);
             }
+            return _mapper.Map<StockGetDTO>(stock);
         }
         public void InsertOrUpdate(List<List<string>> data)
         {
@@ -286,5 +312,105 @@ namespace ProjectLaborBackend.Services
                 .ToListAsync();
             return _mapper.Map<List<StockGetWithProductDTO>>(stocks);
         }
+
+        public async Task<StockWarehouseCostGetDTO> WarehouseCost(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Where(p => p.Stocks.Any(s => s.WarehouseId == warehouseId))
+                .ToListAsync();
+
+            var stockWarehouseCost = new StockWarehouseCostGetDTO();
+
+            foreach (var product in products)
+            {
+                var stock = product.Stocks.FirstOrDefault(s => s.WarehouseId == warehouseId);
+                if (stock == null) continue;
+
+                var stockChanges = await _context.StockChanges
+                    .Where(sc => sc.ProductId == product.Id)
+                    .ToListAsync();
+
+                stockWarehouseCost.ProductStockChanges.Add(new ProductStockChangesDTO
+                {
+                    Product = _mapper.Map<ProductGetNoPicDTO>(product),
+                    Stock = _mapper.Map<StockGetNoPicDTO>(stock),
+                    StockChanges = _mapper.Map<List<StockChangeGetDTO>>(stockChanges)
+                });
+            }
+
+            return stockWarehouseCost;
+        }
+
+        public async Task<StorageCostGetDTO> StorageCost(int warehouseId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Stocks)
+                .ThenInclude(s => s.Warehouse)
+                .Where(p => p.Stocks.Any(s => s.WarehouseId == warehouseId))
+                .ToListAsync();
+
+            StorageCostGetDTO storageCostDto = new StorageCostGetDTO
+            {
+                StorageCosts = new List<ProductStorageCostDTO>()
+            };
+
+            DateTime now = DateTime.UtcNow.Date;
+
+            foreach (var product in products)
+            {
+                var stock = product.Stocks.FirstOrDefault(s => s.WarehouseId == warehouseId);
+                if (stock == null) continue;
+
+                var stockChanges = await _context.StockChanges
+                    .Where(sc => sc.ProductId == product.Id)
+                    .OrderBy(sc => sc.ChangeDate)
+                    .ToListAsync();
+
+                var dailyCosts = new List<DailyStorageCostDTO>();
+
+                DateTime startDate = stockChanges.Count > 0
+                    ? stockChanges.First().ChangeDate.Date
+                    : now.AddDays(-30);
+
+                int currentStock = stock.StockInWarehouse;
+
+                int changeIndex = 0;
+                for (DateTime day = startDate; day <= now; day = day.AddDays(1))
+                {
+                    while (changeIndex < stockChanges.Count && stockChanges[changeIndex].ChangeDate.Date == day)
+                    {
+                        currentStock += stockChanges[changeIndex].Quantity;
+                        if (currentStock < 0) currentStock = 0;
+                        changeIndex++;
+                    }
+
+                    double dailyCost = currentStock * stock.StorageCost;
+
+                    dailyCosts.Add(new DailyStorageCostDTO
+                    {
+                        Date = day,
+                        Cost = dailyCost
+                    });
+                }
+
+                storageCostDto.StorageCosts.Add(new ProductStorageCostDTO
+                {
+                    Product = new ProductGetNoPicDTO
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+                        EAN = product.EAN,
+                        Description = product.Description
+                    },
+                    DailyCosts = dailyCosts
+                });
+            }
+
+            return storageCostDto;
+        }
+
+
     }
 }

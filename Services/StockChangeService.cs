@@ -11,13 +11,15 @@ namespace ProjectLaborBackend.Services
         Task<List<StockChangeGetDTO>> GetAllStockChangeAsync();
         Task<StockChangeGetDTO> GetStockChangeByIdAsync(int id);
         Task<List<StockChangeGetDTO>> GetStockChangeByWarehouseAsync(int warehouseId);
-        Task CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto);
-        Task PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto);
+        Task<StockChangeGetDTO> CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto);
+        Task<StockChangeGetDTO> PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto);
         Task DeleteStockChangeAsync(int id);
         void InsertOrUpdate(List<List<string>> data);
         Task<List<StockChangeGetDTO>> GetStockChangesByProductAsync(int productId, int warehouseId);
         Task<List<StockChangeGetDTO>> GetPreviousWeekSalesAsync(int warehouse);
         Task<double> CalculateMovingAverageQuantityAsync(int productId, int warehouseId, int windowSize);
+
+        Task<List<StockChangeGetDTO>> GetStockChangesByWarehouseAsync(int warehouseId);
     }
     public class StockChangeService : IStockChangeService
     {
@@ -46,7 +48,7 @@ namespace ProjectLaborBackend.Services
             return _mapper.Map<List<StockChangeGetDTO>>(stockChanges);
         }
 
-        public async Task CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto)
+        public async Task<StockChangeGetDTO> CreateStockChangeAsync(StockChangeCreateDTO stockChangeDto)
         {
             if (stockChangeDto == null)
                 throw new ArgumentNullException("Quantity, ChangeDate or ProductId needed");
@@ -68,9 +70,10 @@ namespace ProjectLaborBackend.Services
             StockChange stockChange = _mapper.Map<StockChange>(stockChangeDto);
             await _context.StockChanges.AddAsync(stockChange);
             await _context.SaveChangesAsync();
+            return _mapper.Map<StockChangeGetDTO>(await _context.StockChanges.FirstOrDefaultAsync(o => o.ProductId == stockChangeDto.ProductId && o.ChangeDate == stockChangeDto.ChangeDate));
         }
 
-        public async Task PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto)
+        public async Task<StockChangeGetDTO> PatchStockChangesAsync(int id, StockChangeUpdateDTO stockChangeDto)
         {
             if (stockChangeDto == null)
                 throw new ArgumentNullException("Quantity, ChangeDate or ProductId needed");
@@ -92,7 +95,7 @@ namespace ProjectLaborBackend.Services
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
                 if (!_context.StockChanges.Any(e => e.Id == id))
                 {
@@ -100,9 +103,10 @@ namespace ProjectLaborBackend.Services
                 }
                 else
                 {
-                    throw;
+                    throw new Exception(ex.Message + "\n" + ex.InnerException.Message);
                 }
             }
+            return _mapper.Map<StockChangeGetDTO>(stockChange);
         }
 
         public async Task DeleteStockChangeAsync(int id)
@@ -232,6 +236,16 @@ namespace ProjectLaborBackend.Services
                 .Where(sc => sc.Product.Stocks.Any(s => s.Warehouse.Id == warehouse))
                 .Where(sc => sc.Quantity < 0)
                 .Where(sc => sc.ChangeDate >= startOfPreviousWeek && sc.ChangeDate < endOfPreviousWeek.AddDays(1))
+                .ToListAsync();
+
+            return _mapper.Map<List<StockChangeGetDTO>>(stockChanges);
+        }
+
+        public async Task<List<StockChangeGetDTO>> GetStockChangesByWarehouseAsync(int warehouseId)
+        {
+            var stockChanges = await _context.StockChanges
+                .Include(sc => sc.Product)
+                .Where(sc => sc.Product.Stocks.Any(s => s.Warehouse.Id == warehouseId))
                 .ToListAsync();
 
             return _mapper.Map<List<StockChangeGetDTO>>(stockChanges);

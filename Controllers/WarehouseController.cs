@@ -43,9 +43,10 @@ namespace ProjectLaborBackend.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PutWarehouse(int id, WarehouseUpdateDTO warehouse)
         {
+            WarehouseGetDTO? updatedWarehouse;
             try
             {
-                await _warehouseService.PatchWarehouseAsync(id, warehouse);
+                updatedWarehouse = await _warehouseService.PatchWarehouseAsync(id, warehouse);
             }
             catch (KeyNotFoundException ex)
             {
@@ -63,7 +64,7 @@ namespace ProjectLaborBackend.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok(updatedWarehouse);
         }
 
         // POST: api/WarehousesController
@@ -71,9 +72,10 @@ namespace ProjectLaborBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Warehouse>> PostWarehouse([FromBody] WarehousePostDTO warehouse)
         {
+            WarehouseGetDTO? createdWarehouse;
             try
             {
-                await _warehouseService.CreateWarehouseAsync(warehouse);
+                createdWarehouse = await _warehouseService.CreateWarehouseAsync(warehouse);
             }
             catch (ArgumentNullException ex)
             {
@@ -84,7 +86,7 @@ namespace ProjectLaborBackend.Controllers
                 return BadRequest(ex.Message);
             }
 
-            return Created();
+            return Ok(createdWarehouse);
         }
 
         // DELETE: api/WarehousesController/5
@@ -114,6 +116,19 @@ namespace ProjectLaborBackend.Controllers
         private bool WarehouseExists(int id)
         {
             return _warehouseService.GetWarehouseByIdAsync(id) != null;
+        }
+
+        [HttpGet("productssold/{warehouseId}")]
+        public async Task<ActionResult<Dictionary<string ,int>>> GetProductsSoldByWarehouse(int warehouseId)
+        {
+            try
+            {
+                return await _warehouseService.GetAllProductsSoldById(warehouseId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }
