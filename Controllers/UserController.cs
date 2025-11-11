@@ -92,6 +92,14 @@ namespace ProjectLaborBackend.Controllers
             catch (Exception e) { return BadRequest(e.Message); }
         }
 
+        [HttpPost("generate-pwd-reset-token/{userId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GeneratePasswordResetToken(int userId)
+        {
+            string token = await userService.GeneratePwdResetToken(userId);
+            return Ok(token);
+        }
+
         [HttpPatch("reset-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotUpdateProfilePassword([FromBody] ForgotUserPutPasswordDTO userDto)

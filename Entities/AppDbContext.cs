@@ -13,6 +13,7 @@ namespace ProjectLaborBackend.Entities
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<StockChange> StockChanges { get; set; }
+        public DbSet<PwdResetToken> PwdResetTokens { get; set; }
 
         public enum Tables
         {
@@ -21,7 +22,8 @@ namespace ProjectLaborBackend.Entities
             Stocks,
             Users,
             UserWarehouse,
-            Warehouses
+            Warehouses,
+            PwdResetTokens
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -39,6 +41,10 @@ namespace ProjectLaborBackend.Entities
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Warehouses)
                 .WithMany(w => w.Users);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.ResetTokens)
+                .WithOne(rt => rt.User);
 
             modelBuilder.Entity<Warehouse>()
                 .HasMany(w => w.Stocks)
@@ -82,6 +88,7 @@ namespace ProjectLaborBackend.Entities
         public Role Role { get; set; }
         public bool IsVerified { get; set; }
         public ICollection<Warehouse> Warehouses { get; set; }
+        public ICollection<PwdResetToken> ResetTokens { get; set; }
     }
 
     public class Warehouse
@@ -153,5 +160,17 @@ namespace ProjectLaborBackend.Entities
         public DateTime ChangeDate { get; set; } = DateTime.Now;
         public int ProductId { get; set; }
         public Product Product { get; set; }
+    }
+
+    public class PwdResetToken
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public string Token { get; set; }
+        [DataType(DataType.DateTime)]
+        public DateTime Expiration { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
     }
 }
