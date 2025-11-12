@@ -1,0 +1,96 @@
+﻿@model dynamic
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email hitelesítés – RakLap</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f8;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 28px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(22,28,37,0.06);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: #111827;
+            color: #fff;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 20px;
+            }
+
+        .content {
+            padding: 26px;
+            color: #0f1720;
+        }
+
+        .code-box {
+            text-align: center;
+            background: #f0f4ff;
+            border: 1px solid #d1d9ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 24px 0;
+            font-size: 26px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            color: #0b6cf6;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .footer {
+            padding: 18px 26px;
+            font-size: 13px;
+            color: #6b7280;
+            background: #fbfcfd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Email hitelesítés</h1>
+        </div>
+        <div class="content">
+            <p>Szia <strong>@Model.LastName</strong>,</p>
+            <p>Köszönjük, hogy regisztráltál a <span class="brand">RakLap</span> alkalmazásban!</p>
+            <p>Az email-címed megerősítéséhez használd az alábbi ellenőrző kódot:</p>
+
+            <div class="code-box">@Model.Code</div>
+
+            <p>Ez a kód <strong>10 percig érvényes</strong>.</p>
+            <p class="muted">
+                Ha nem te kérted az email-hitelesítést, ezt az üzenetet figyelmen kívül hagyhatod.
+            </p>
+            <hr style="border:none; border-top:1px solid #eef2f6; margin:22px 0;" />
+            <p>
+                Ha bármilyen kérdésed van, írj nekünk:
+                <a href="mailto:mail.raklap@gmail.com">mail.raklap@gmail.com</a>
+            </p>
+            <p>Üdvözlettel,<br /><strong>a RakLap csapata</strong></p>
+        </div>
+        <div class="footer">
+            <div>© 2025 RakLap. Minden jog fenntartva.</div>
+        </div>
+    </div>
+</body>
+</html>

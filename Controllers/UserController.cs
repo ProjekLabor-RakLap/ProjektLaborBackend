@@ -148,5 +148,32 @@ namespace ProjectLaborBackend.Controllers
             }
             catch (Exception e) { return BadRequest(e.Message); }
         }
+
+        [HttpPost("send-verification-code")]
+        public async Task<IActionResult> SendVerificationCode([FromBody] SendVerificationEmailDTO sendVerificationEmailDTO)
+        {
+            try
+            {
+                await userService.SendVerificationCodeAsync(sendVerificationEmailDTO);
+                return Ok("Verification code sent to email.");
+            }catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerificationDTO verificationDTO)
+        {
+            try
+            {
+                bool verified = await userService.VerifyEmailAsync(verificationDTO);
+                return verified ? Ok("Email successfully verified!") : BadRequest("Verification failed.");
+            }catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }
