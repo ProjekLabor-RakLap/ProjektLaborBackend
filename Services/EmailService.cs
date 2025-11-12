@@ -12,9 +12,8 @@ namespace ProjectLaborBackend.Services
     public interface IEmailService
     {
         Task SendEmail<T>(string userEmail, string subject, string template, T model);
-        Task SendEmail(string userEmail, string subject, string template);
-        Task SendEmail(string userEmail, string subject, string templateBody, object? model = null);
-        Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null);
+        //Task SendEmail(string userEmail, string subject, string templateBody, object? model = null);
+        //Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null);
     }
     public class EmailService : IEmailService
     {
@@ -31,13 +30,11 @@ namespace ProjectLaborBackend.Services
         public async Task SendEmail<T>(string userEmail, string subject, string template, T model)
         {
             var UserDTO = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
-            
+
             if (UserDTO == null)
             {
                 throw new KeyNotFoundException("User with given email does not exist!");
             }
-
-            //var user = _mapper.Map<User>(UserDTO);
 
             await _fluentEmail
                .Create()
@@ -47,45 +44,45 @@ namespace ProjectLaborBackend.Services
                .SendAsync();
         }
 
-        public async Task SendEmail(string userEmail, string subject, string template, object? model = null)
-        {
-            var UserDTO = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+        //public async Task SendEmail(string userEmail, string subject, string template, object? model = null)
+        //{
+        //    var UserDTO = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
 
-            if (UserDTO == null)
-            {
-                throw new KeyNotFoundException("User with given email does not exist!");
-            }
+        //    if (UserDTO == null)
+        //    {
+        //        throw new KeyNotFoundException("User with given email does not exist!");
+        //    }
 
-            var user = _mapper.Map<User>(UserDTO);
+        //    var user = _mapper.Map<User>(UserDTO);
 
-            var finalModel = model ?? user;
+        //    var finalModel = model ?? user;
 
-            await _fluentEmail
-               .Create()
-               .To(userEmail)
-               .Subject(subject)
-               .UsingTemplateFromFile(template, finalModel)
-               .SendAsync();
-        }
+        //    await _fluentEmail
+        //       .Create()
+        //       .To(userEmail)
+        //       .Subject(subject)
+        //       .UsingTemplateFromFile(template, finalModel)
+        //       .SendAsync();
+        //}
 
-        public async Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null)
-        {
-            var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+        //public async Task SendEmailFromString(string userEmail, string subject, string templateBody, object? model = null)
+        //{
+        //    var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
 
-            if (userEntity == null)
-                throw new KeyNotFoundException("User with given email does not exist!");
+        //    if (userEntity == null)
+        //        throw new KeyNotFoundException("User with given email does not exist!");
 
-            var user = _mapper.Map<User>(userEntity);
+        //    var user = _mapper.Map<User>(userEntity);
 
-            var finalModel = model ?? user;
+        //    var finalModel = model ?? user;
 
-            await _fluentEmail
-                .Create()
-                .To(userEmail)
-                .Subject(subject)
-                .UsingTemplate(templateBody, finalModel)
-                .SendAsync();
-            Console.WriteLine($"\n\n\n Email sent | userEmail: {userEmail} | user.email: {user.Email}\n\n\n");
-        }
+        //    await _fluentEmail
+        //        .Create()
+        //        .To(userEmail)
+        //        .Subject(subject)
+        //        .UsingTemplate(templateBody, finalModel)
+        //        .SendAsync();
+        //    Console.WriteLine($"\n\n\n Email sent | userEmail: {userEmail} | user.email: {user.Email}\n\n\n");
+        //}
     }
 }
