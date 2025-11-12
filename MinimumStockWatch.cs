@@ -1,11 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
-using ProjectLaborBackend.Email;
 using ProjectLaborBackend.Email.Models;
 using ProjectLaborBackend.Entities;
 using ProjectLaborBackend.Services;
-using System.Globalization;
 
 namespace ProjectLaborBackend
 {
@@ -33,7 +30,7 @@ namespace ProjectLaborBackend
                 {
                     // Find all stocks for user's warehouses that are low
                     var userStocks = stocks.Where(stock =>
-                        (stock.StockInWarehouse < ((stock.WhenToNotify ?? 0) / 100 * stock.WarehouseCapacity) || stock.StockInWarehouse < ((stock.WhenToWarn ?? 0) / 100 * stock.WarehouseCapacity)) &&
+                        (stock.StockInWarehouse < ((stock.WhenToNotify ?? 0) / 100.0 * stock.WarehouseCapacity) || stock.StockInWarehouse < ((stock.WhenToWarn ?? 0) / 100.0 * stock.WarehouseCapacity)) &&
                         user.Warehouses.Any(w => w.Id == stock.WarehouseId)).ToList();
 
                     if (!userStocks.Any()) continue;
@@ -46,7 +43,7 @@ namespace ProjectLaborBackend
                         var recentEmails = emailLogs.Where(e => e.RecipientEmail == user.Email && e.ProductId == stock.ProductId).ToList();
                         bool hasNotification = recentEmails.Any(e => e.EmailType == EmailType.LowStockNotification);
                         bool hasWarning = recentEmails.Any(e => e.EmailType == EmailType.LowStockWarning);
-                        if (stock.StockInWarehouse < (stock.WhenToWarn ?? 0) / 100 * stock.WarehouseCapacity)
+                        if (stock.StockInWarehouse < (stock.WhenToWarn ?? 0) / 100.0 * stock.WarehouseCapacity)
                         {
                             if (!hasWarning)
                                 stocksToWarn.Add(stock);
@@ -66,13 +63,15 @@ namespace ProjectLaborBackend
                             {
                                 ProductName = s.Product.Name,
                                 Stock = s.StockInWarehouse,
-                                Capacity = s.WarehouseCapacity
+                                Capacity = s.WarehouseCapacity,
+                                WarehouseName = s.Warehouse.Name
                             }).ToList(),
                             NotificationStocks = stocksToNotify.Select(s => new StockInfo
                             {
                                 ProductName = s.Product.Name,
                                 Stock = s.StockInWarehouse,
-                                Capacity = s.WarehouseCapacity
+                                Capacity = s.WarehouseCapacity,
+                                WarehouseName = s.Warehouse.Name
                             }).ToList()
                         };
 
@@ -114,8 +113,7 @@ namespace ProjectLaborBackend
                     throw;
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-                //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
     }

@@ -14,7 +14,6 @@ namespace ProjectLaborBackend.Entities
         public DbSet<Product> Products { get; set; }
         public DbSet<StockChange> StockChanges { get; set; }
         public DbSet<PwdResetToken> PwdResetTokens { get; set; }
-
         public DbSet<EmailLog> EmailLogs { get; set; }
         public enum Tables
         {
