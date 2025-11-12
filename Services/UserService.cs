@@ -15,6 +15,27 @@ using System.Text;
 
 namespace ProjectLaborBackend.Services
 {
+    public static class VerificationStore
+    {
+        private static readonly object _lock = new();
+        public static readonly Dictionary<string, (int Code, DateTime ExpiresAt)> Codes = new();
+
+        public static void CleanupExpired()
+        {
+            lock (_lock)
+            {
+                var expired = Codes
+                    .Where(x => x.Value.ExpiresAt < DateTime.UtcNow)
+                    .Select(x => x.Key)
+                    .ToList();
+
+                foreach (var key in expired)
+                    Codes.Remove(key);
+            }
+        }
+    }
+
+
     public interface IUserService
     {
         Task<List<UserGetDTO>> GetUsersAsync();
@@ -28,7 +49,8 @@ namespace ProjectLaborBackend.Services
         Task<UserGetDTO> UpdateUserPasswordAsync(UserPutPasswordDTO UserDTO);
         Task AssignUserWarehouseAsync(UserAssignWarehouseDTO UserDTO);
         Task DeleteUserFromWarehouseAsync(UserAssignWarehouseDTO UserDTO);
-
+        Task SendVerificationCodeAsync(SendVerificationEmailDTO sendVerificationEmailDTO);
+        Task<bool> VerifyEmailAsync(VerificationDTO verificationDTO);
     }
     public class UserService : IUserService
     {
@@ -280,5 +302,58 @@ namespace ProjectLaborBackend.Services
             warehouse.Users.Remove(user);
             await context.SaveChangesAsync();
         }
+
+        public async Task SendVerificationCodeAsync(SendVerificationEmailDTO sendVerificationEmailDTO)
+        {
+            User? user = await context.Users.FirstOrDefaultAsync(x => x.Email == sendVerificationEmailDTO.Email);
+            if (user == null)
+                throw new KeyNotFoundException("No user found with this email address");
+
+            if (user.IsVerified)
+                throw new InvalidOperationException("User is already verified");
+
+            int code = new Random().Next(100000, 999999);
+
+            VerificationStore.Codes[sendVerificationEmailDTO.Email] = (code, DateTime.UtcNow.AddMinutes(10));
+
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Email", "Templates", "Verify.cshtml");
+            await _emailService.SendEmail(
+                user.Email,
+                "RakLap – Email hitelesítés",
+                templatePath,
+                new { user.LastName, Code = code }
+            );
+
+        }
+
+        public async Task<bool> VerifyEmailAsync(VerificationDTO verificationDTO)
+        {
+            User? user = await context.Users.FirstOrDefaultAsync(x => x.Email == verificationDTO.Email);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+
+            if (user.IsVerified)
+                throw new InvalidOperationException("User already verified");
+
+            if (!VerificationStore.Codes.TryGetValue(verificationDTO.Email, out var stored))
+                throw new InvalidOperationException("No verification code found. Please request a new one.");
+
+            if (stored.ExpiresAt < DateTime.UtcNow)
+            {
+                VerificationStore.Codes.Remove(verificationDTO.Email);
+                throw new InvalidOperationException("Verification code expired. Please request a new one.");
+            }
+
+            if (stored.Code != verificationDTO.VerificationCode)
+                throw new InvalidOperationException("Invalid verification code.");
+
+            user.IsVerified = true;
+            await context.SaveChangesAsync();
+
+            VerificationStore.Codes.Remove(verificationDTO.Email);
+            return true;
+        }
+
+
     }
 }
