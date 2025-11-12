@@ -3,12 +3,10 @@ using ProjectLaborBackend.Services;
 
 public class VerificationCleanupService : BackgroundService
 {
-    private readonly ILogger<VerificationCleanupService> _logger;
     private readonly TimeSpan _interval = TimeSpan.FromMinutes(10);
 
-    public VerificationCleanupService(ILogger<VerificationCleanupService> logger)
+    public VerificationCleanupService()
     {
-        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
