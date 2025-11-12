@@ -1,4 +1,4 @@
-﻿namespace ProjectLaborBackend.Email
+﻿namespace ProjectLaborBackend.Email.Models
 {
     public class StockEmailModel
     {

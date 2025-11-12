@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using ProjectLaborBackend.Email;
+using ProjectLaborBackend.Email.Models;
 using ProjectLaborBackend.Entities;
 using ProjectLaborBackend.Services;
 using System.Globalization;
@@ -113,7 +114,8 @@ namespace ProjectLaborBackend
                     throw;
                 }
 
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
     }

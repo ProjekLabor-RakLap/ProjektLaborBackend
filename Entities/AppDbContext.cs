@@ -165,15 +165,6 @@ namespace ProjectLaborBackend.Entities
         public Product Product { get; set; }
     }
 
-    public class PwdResetToken 
-    {
-        public string Token { get; set; }
-        [DataType(DataType.DateTime)]
-        public DateTime Expiration { get; set; }
-        public int UserId { get; set; }
-        public User User { get; set; }
-    }
-  
     public enum EmailType
     {
         Verification,
@@ -183,6 +174,18 @@ namespace ProjectLaborBackend.Entities
     }
 
     public class EmailLog
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        [EmailAddress]
+        public string RecipientEmail { get; set; }
+        public EmailType EmailType { get; set; }
+        [DataType(DataType.DateTime)]
+        public DateTime SentDate { get; set; } = DateTime.Now;
+        public int ProductId { get; set; }
+    }
+    public class PwdResetToken
     {
         [Key]
         public int Id { get; set; }
