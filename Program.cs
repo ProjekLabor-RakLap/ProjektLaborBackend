@@ -65,6 +65,7 @@ namespace ProjectLaborBackend
             });
 
             builder.Services.AddHostedService<MinimumStockWatch>();
+            builder.Services.AddHostedService<VerificationCleanupService>();
 
             var app = builder.Build();
 
