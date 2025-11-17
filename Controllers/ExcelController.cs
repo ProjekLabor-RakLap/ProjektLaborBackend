@@ -26,11 +26,17 @@ namespace ProjectLaborBackend.Controllers
         }
 
         [HttpPost("export")]
-        public IActionResult ExportDataToExcel(AppDbContext.Tables table)
+        public IActionResult ExportDataToExcel([FromBody] AppDbContext.Tables table)
         {
             try
             {
-                csvOperations.ExportDataToExcel(table);
+                byte[] excelBytes = csvOperations.ExportDataToExcel(table);
+
+                return File(
+                    excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"{table}_Export.xlsx"
+                );
             }
             catch (IOException e)
             {
@@ -40,66 +46,67 @@ namespace ProjectLaborBackend.Controllers
             {
                 return BadRequest("Database error: " + e.Message);
             }
-            return Ok("Exported");
         }
 
         [HttpPost("import")]
-        public IActionResult ImportDataFromExcel(AppDbContext.Tables table)
+        public IActionResult ImportDataFromExcel([FromQuery] AppDbContext.Tables table,IFormFile file)
         {
-            List<List<string>> _dataFromExcel = new List<List<string>>();
-            try 
-            {
-                _dataFromExcel = csvOperations.ImportDataFromExcel(table);
-            }
-            catch (FileNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (IOException e)
-            {
-                return BadRequest(e.Message);
-            }
-            catch (Exception e)
-            {
-                return BadRequest("Database error: " + e.Message);
-            }
-
-            if (_dataFromExcel.Count == 0)
-                return BadRequest("No data found in the Excel file.");
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
 
             try
             {
+                var data = csvOperations.ImportDataFromExcel(file);
+
+                if (data.Count == 0)
+                    return BadRequest("No data found in the Excel file.");
+
                 switch (table)
                 {
                     case AppDbContext.Tables.Products:
-                        productService.InsertOrUpdate(_dataFromExcel);
+                        productService.InsertOrUpdate(data);
                         break;
 
                     case AppDbContext.Tables.StockChanges:
-                        stockChangeService.InsertOrUpdate(_dataFromExcel);
+                        stockChangeService.InsertOrUpdate(data);
                         break;
 
                     case AppDbContext.Tables.Warehouses:
-                        warehouseService.InsertOrUpdate(_dataFromExcel);
+                        warehouseService.InsertOrUpdate(data);
                         break;
 
                     case AppDbContext.Tables.Stocks:
-                        stockService.InsertOrUpdate(_dataFromExcel);
+                        stockService.InsertOrUpdate(data);
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(table), "Unsupported table for import");
+                        return BadRequest("Unsupported table.");
                 }
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(e.Message);
+
+                return Ok("Imported");
             }
             catch (Exception e)
             {
-                return BadRequest($"{e.Message}, {e.StackTrace}");// "Database error: " + e.Message);
+                return BadRequest(e.Message);
             }
-            return Ok("Imported");
+        }
+
+        [HttpGet("template")]
+        public IActionResult DownloadTemplate([FromQuery] AppDbContext.Tables table)
+        {
+            try
+            {
+                var fileBytes = csvOperations.GenerateTemplateForTable(table);
+                var fileName = $"{table}_Template.xlsx";
+
+                return File(fileBytes,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error generating template: " + ex.Message);
+            }
         }
 
     }
