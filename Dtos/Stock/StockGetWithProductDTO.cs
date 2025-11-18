@@ -1,4 +1,5 @@
 ﻿using ProjectLaborBackend.Dtos.Product;
+using ProjectLaborBackend.Dtos.Warehouse;
 
 namespace ProjectLaborBackend.Dtos.Stock
 {
@@ -13,6 +14,7 @@ namespace ProjectLaborBackend.Dtos.Stock
         public string Currency { get; set; }
         public int? WhenToNotify { get; set; } = 0;
         public int? WhenToWarn { get; set; } = 0;
-        public ProductGetNoPicDTO Product { get; set; }
+        public ProductGetDTO Product { get; set; }
+        public WarehouseGetDTO Warehouse { get; set; }
     }
 }

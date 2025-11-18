@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectLaborBackend.Dtos.Product;
 using ProjectLaborBackend.Dtos.Stock;
@@ -55,6 +56,12 @@ namespace ProjectLaborBackend.Services
             if (product == null)
                 throw new KeyNotFoundException("Warehouse with that id does not exist!");
 
+
+            if (stock.WhenToNotify != null && stock.WhenToNotify > 100)
+                throw new ArgumentException("Notify threshold cant be more than 100%");
+            if (stock.WhenToWarn != null && stock.WhenToWarn > 100)
+                throw new ArgumentException("Warn threshold cant be more than 100%");
+
             if(stock.WhenToWarn != null && stock.WhenToNotify != null)
             {
                 if(stock.WhenToWarn > stock.WhenToNotify)
@@ -90,6 +97,16 @@ namespace ProjectLaborBackend.Services
                 throw new KeyNotFoundException("Stock not found!");
 
             return _mapper.Map<StockGetDTO>(stock);
+        }
+
+        public async Task<List<StockGetWithProductDTO>> GetStocksByWarehouseAsync(int warehouseId)
+        {
+            List<Stock> stocks = await _context.Stocks
+                .Include(p => p.Product)
+                .Include(w => w.Warehouse)
+                .Where(s => s.WarehouseId == warehouseId)
+                .ToListAsync();
+            return _mapper.Map<List<StockGetWithProductDTO>>(stocks);
         }
 
         public async Task<StockGetDTO> UpdateStockAsync(int id, StockUpdateDto dto)
@@ -190,7 +207,13 @@ namespace ProjectLaborBackend.Services
             {
                 throw new Exception(ex.Message + "\n" + ex.InnerException.Message);
             }
-            return _mapper.Map<StockGetDTO>(stock);
+
+            var newstock = await _context.Stocks
+                .FirstOrDefaultAsync(s => s.Id == id);
+            Console.WriteLine("\n\n\n\n");
+            Console.WriteLine(stock.Warehouse.Id);
+            Console.WriteLine("\n\n\n\n");
+            return _mapper.Map<StockGetDTO>(newstock);
         }
         public void InsertOrUpdate(List<List<string>> data)
         {
@@ -301,16 +324,6 @@ namespace ProjectLaborBackend.Services
                 throw new KeyNotFoundException("Stock not found!");
 
             return _mapper.Map<StockGetDTO>(stock);
-        }
-
-        public async Task<List<StockGetWithProductDTO>> GetStocksByWarehouseAsync(int warehouseId)
-        {
-            var stocks = await _context.Stocks
-                .Include(p => p.Product)
-                .Include(w => w.Warehouse)
-                .Where(s => s.WarehouseId == warehouseId)
-                .ToListAsync();
-            return _mapper.Map<List<StockGetWithProductDTO>>(stocks);
         }
 
         public async Task<StockWarehouseCostGetDTO> WarehouseCost(int warehouseId)
