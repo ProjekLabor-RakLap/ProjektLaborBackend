@@ -74,33 +74,40 @@ namespace ProjectLaborBackend
                                 WarehouseName = s.Warehouse.Name
                             }).ToList()
                         };
-
-                        await _emailService.SendEmail(
-                            user.Email,
-                            stocksToWarn.Any() ? "Kritikus termékszint figyelmeztetés" : "Alacsony termékszint figyelmeztetés",
-                            $"{Directory.GetCurrentDirectory()}/Email/Templates/MinimumStock.cshtml",
-                            model
-                        );
-
-                        foreach (var stock in stocksToWarn)
+                        try
                         {
-                            _context.EmailLogs.Add(new EmailLog
+                            await _emailService.SendEmail(
+                                user.Email,
+                                stocksToWarn.Any() ? "Kritikus termékszint figyelmeztetés" : "Alacsony termékszint figyelmeztetés",
+                                $"{Directory.GetCurrentDirectory()}/Email/Templates/MinimumStock.cshtml",
+                                model
+                            );
+                        
+
+                            foreach (var stock in stocksToWarn)
                             {
-                                RecipientEmail = user.Email,
-                                EmailType = EmailType.LowStockWarning,
-                                SentDate = DateTime.Now,
-                                ProductId = stock.ProductId
-                            });
-                        }
-                        foreach (var stock in stocksToNotify)
+                                _context.EmailLogs.Add(new EmailLog
+                                {
+                                    RecipientEmail = user.Email,
+                                    EmailType = EmailType.LowStockWarning,
+                                    SentDate = DateTime.Now,
+                                    ProductId = stock.ProductId
+                                });
+                            }
+                            foreach (var stock in stocksToNotify)
+                            {
+                                _context.EmailLogs.Add(new EmailLog
+                                {
+                                    RecipientEmail = user.Email,
+                                    EmailType = EmailType.LowStockNotification,
+                                    SentDate = DateTime.Now,
+                                    ProductId = stock.ProductId
+                                });
+                            }
+                        }catch(Exception ex)
                         {
-                            _context.EmailLogs.Add(new EmailLog
-                            {
-                                RecipientEmail = user.Email,
-                                EmailType = EmailType.LowStockNotification,
-                                SentDate = DateTime.Now,
-                                ProductId = stock.ProductId
-                            });
+                            //email sending failure
+                            Console.WriteLine(ex);
                         }
                     }
                 }

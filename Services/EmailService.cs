@@ -33,13 +33,19 @@ namespace ProjectLaborBackend.Services
             {
                 throw new KeyNotFoundException("User with given email does not exist!");
             }
-
-            await _fluentEmail
-               .Create()
-               .To(userEmail)
-               .Subject(subject)
-               .UsingTemplateFromFile(template, model)
-               .SendAsync();
+            try
+            {
+                await _fluentEmail
+                   .Create()
+                   .To(userEmail)
+                   .Subject(subject)
+                   .UsingTemplateFromFile(template, model)
+                   .SendAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to send email.", ex);
+            }
         }
     }
 }
