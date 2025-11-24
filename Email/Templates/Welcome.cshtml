@@ -1,4 +1,4 @@
-﻿@model ProjectLaborBackend.Entities.User
+﻿@model ProjectLaborBackend.Email.Models.UserModel
 <!DOCTYPE html>
 <html lang="hu">
     <head>
@@ -71,7 +71,7 @@
                 <h1>Üdvözlünk a RakLap-ban!</h1>
             </div>
             <div class="content">
-                <p>Szia <strong>@Model.LastName</strong>,</p>
+                <p>Szia <strong>@Model.User.LastName</strong>,</p>
                 <p>Köszönjük, hogy regisztráltál a <span class="brand">RakLap</span> alkalmazásban — örülünk, hogy itt vagy!
                 A RakLap segít a raktárkészleted nyilvántartásában, a készletmozgások követésében és az ügyintézés egyszerűsítésében.</p>
                 <p>Ha készen állsz, hitelesíts fiókodat az alábbi gomb megnyomásával:</p>

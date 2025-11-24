@@ -23,7 +23,7 @@ namespace ProjectLaborBackend.Controllers
         }
 
         [HttpPost("send-welcome")]
-        public async Task<IActionResult> SendWelcomeEmail([FromBody] UserEmailDto emailDto, int userId)
+        public async Task<IActionResult> SendWelcomeEmail([FromBody] UserEmailDto emailDto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == emailDto.Email);
 
@@ -41,26 +41,26 @@ namespace ProjectLaborBackend.Controllers
             }
         }
         
-        [HttpPost("send-password-reset")]
-        public async Task<IActionResult> SendPasswordResetEmail([FromBody] UserEmailDto emailDto, int userId)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == emailDto.Email);
-            var emailModel = new PasswordResetEmailModel
-            {
-                User = user,
-                Token = "test test"
-            };
+        //[HttpPost("send-password-reset")]
+        //public async Task<IActionResult> SendPasswordResetEmail([FromBody] UserEmailDto emailDto)
+        //{
+        //    var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == emailDto.Email);
+        //    var emailModel = new PasswordResetEmailModel
+        //    {
+        //        User = user,
+        //        Token = "test test"
+        //    };
 
-            try
-            {
-                string templatePath = $"{Directory.GetCurrentDirectory()}/Email/Templates/PasswordReset.cshtml";
-                await _emailService.SendEmail(emailDto.Email, "Jelszó visszaállítás", templatePath, emailModel);
-                return Ok("Password reset email sent successfully!");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
+        //    try
+        //    {
+        //        string templatePath = $"{Directory.GetCurrentDirectory()}/Email/Templates/PasswordReset.cshtml";
+        //        await _emailService.SendEmail(emailDto.Email, "Jelszó visszaállítás", templatePath, emailModel);
+        //        return Ok("Password reset email sent successfully!");
+        //    }
+        //    catch (KeyNotFoundException e)
+        //    {
+        //        return BadRequest(e.Message);
+        //    }
+        //}
     }
 }

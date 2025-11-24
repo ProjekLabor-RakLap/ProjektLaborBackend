@@ -44,7 +44,7 @@ namespace ProjectLaborBackend.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to send email.", ex);
+                Console.WriteLine($"Failed to send email. {ex.Message}");
             }
         }
     }
