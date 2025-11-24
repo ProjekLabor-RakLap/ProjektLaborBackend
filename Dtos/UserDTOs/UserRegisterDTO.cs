@@ -5,11 +5,11 @@ namespace ProjectLaborBackend.Dtos.UserDTOs
     public class UserRegisterDTO
     {
         [Required]
-        [StringLength(50)]
+        [StringLength(75)]
         public string FirstName { get; set; }
 
         [Required]
-        [StringLength(50)]
+        [StringLength(75)]
         public string LastName { get; set; }
 
         [Required]

@@ -1,4 +1,4 @@
-﻿namespace ProjectLaborBackend.Email
+﻿namespace ProjectLaborBackend.Email.Models
 {
     public class StockEmailModel
     {
@@ -12,5 +12,6 @@
         public string ProductName { get; set; } = "";
         public int Stock { get; set; }
         public int Capacity { get; set; }
+        public string WarehouseName { get; set; } = "";
     }
 }

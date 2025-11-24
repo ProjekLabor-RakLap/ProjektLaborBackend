@@ -60,8 +60,8 @@ namespace ProjectLaborBackend.Controllers
         {
             try
             {
-                await userService.LoginAsync(userDto);
-                return Ok();
+                var user = await userService.LoginAsync(userDto);
+                return Ok(user);
             }
             catch (UnauthorizedAccessException e) { return Unauthorized(e.Message); }
             catch (Exception e) { return BadRequest(e.Message); }
@@ -90,6 +90,14 @@ namespace ProjectLaborBackend.Controllers
             }
             catch (KeyNotFoundException e) { return NotFound(e.Message); }
             catch (Exception e) { return BadRequest(e.Message); }
+        }
+
+        [HttpPost("generate-pwd-reset-token/{userId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GeneratePasswordResetToken(int userId)
+        {
+            string token = await userService.GeneratePwdResetToken(userId);
+            return Ok(token);
         }
 
         [HttpPatch("reset-password")]
@@ -124,7 +132,7 @@ namespace ProjectLaborBackend.Controllers
             try
             {
                 await userService.AssignUserWarehouseAsync(userDTO);
-                return Ok(userDTO);
+                return Ok();
             }
             catch (Exception e) { return BadRequest(e.Message); }
         }
@@ -136,9 +144,36 @@ namespace ProjectLaborBackend.Controllers
             try
             {
                 await userService.DeleteUserFromWarehouseAsync(userDTO);
-                return Ok(userDTO);
+                return Ok();
             }
             catch (Exception e) { return BadRequest(e.Message); }
+        }
+
+        [HttpPost("send-verification-code")]
+        public async Task<IActionResult> SendVerificationCode([FromBody] SendVerificationEmailDTO sendVerificationEmailDTO)
+        {
+            try
+            {
+                await userService.SendVerificationCodeAsync(sendVerificationEmailDTO);
+                return Ok("Verification code sent to email.");
+            }catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerificationDTO verificationDTO)
+        {
+            try
+            {
+                bool verified = await userService.VerifyEmailAsync(verificationDTO);
+                return verified ? Ok("Email successfully verified!") : BadRequest("Verification failed.");
+            }catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }
