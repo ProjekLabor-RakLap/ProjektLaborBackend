@@ -45,7 +45,7 @@ namespace ProjectLaborBackend.Services
         Task<UserGetDTO> UpdateProfileAsync(int userId, UserPatchDTO UserDTO);
         Task DeleteUser(int id);
         Task<UserGetDTO> ForgotUpdateUserPasswordAsync(ForgotUserPutPasswordDTO UserDTO);
-        Task<string> GeneratePwdResetToken(int id);
+        Task<string> GeneratePwdResetToken(string email);
         Task<UserGetDTO> UpdateUserPasswordAsync(UserPutPasswordDTO UserDTO);
         Task AssignUserWarehouseAsync(UserAssignWarehouseDTO UserDTO);
         Task DeleteUserFromWarehouseAsync(UserAssignWarehouseDTO UserDTO);
@@ -183,9 +183,9 @@ namespace ProjectLaborBackend.Services
             await context.SaveChangesAsync();
         }
 
-        public async Task<string> GeneratePwdResetToken(int id)
+        public async Task<string> GeneratePwdResetToken(string email)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
             var token = new PwdResetToken
             {
                 User = user,

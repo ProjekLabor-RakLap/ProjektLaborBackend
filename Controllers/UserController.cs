@@ -92,11 +92,11 @@ namespace ProjectLaborBackend.Controllers
             catch (Exception e) { return BadRequest(e.Message); }
         }
 
-        [HttpPost("generate-pwd-reset-token/{userId}")]
+        [HttpPost("generate-pwd-reset-token/{useremail}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GeneratePasswordResetToken(int userId)
+        public async Task<IActionResult> GeneratePasswordResetToken(string useremail)
         {
-            string token = await userService.GeneratePwdResetToken(userId);
+            string token = await userService.GeneratePwdResetToken(useremail);
             return Ok(token);
         }
 
